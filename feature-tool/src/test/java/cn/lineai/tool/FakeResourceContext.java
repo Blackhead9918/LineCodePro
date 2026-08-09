@@ -20,11 +20,11 @@ import java.util.regex.Pattern;
  * throws "not mocked", so the production code path consults this resolver instead
  * of the {@code Context} when one is provided via {@link ToolContext.Builder}.
  */
-final class FakeResourceContext implements ToolContext.StringResolver {
+public final class FakeResourceContext implements ToolContext.StringResolver {
 
     private final Map<Integer, String> table = new HashMap<>();
 
-    FakeResourceContext() {
+    public FakeResourceContext() {
         Map<String, String> nameToText = parseStringsXml();
         Field[] fields = R.string.class.getDeclaredFields();
         for (Field field : fields) {

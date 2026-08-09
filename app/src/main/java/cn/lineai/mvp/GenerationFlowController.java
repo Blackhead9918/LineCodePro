@@ -8,6 +8,7 @@ import cn.lineai.ai.ModelCompletionException;
 import cn.lineai.ai.ModelCompletionResponse;
 import cn.lineai.ai.ModelRequestOptions;
 import cn.lineai.ai.ModelStreamCallback;
+import cn.lineai.ai.RetryPolicy;
 import cn.lineai.ai.ToolCallTextParser;
 import cn.lineai.ai.message.ModelMessage;
 import cn.lineai.context.TokenUsageTracker;
@@ -68,7 +69,6 @@ final class GenerationFlowController {
     }
 
     private static final int MAX_RETRIES = 3;
-    private static final long RETRY_DELAY_MS = 5000L;
 
     private final ArrayList<ChatMessage> messages;
     private final ChatSessionStore chatSessionStore;
@@ -90,6 +90,7 @@ final class GenerationFlowController {
     private final ContextCompactionController contextCompactionController;
     private final TokenUsageTracker tokenUsageTracker;
     private java.util.function.BooleanSupplier bypassPathProtectionSupplier = () -> false;
+    private ToolContext.StringResolver stringResolver;
     private final AgentExecutionController.Host agentHost = new AgentExecutionController.Host() {
         @Override
         public String projectPath() {
@@ -419,12 +420,17 @@ final class GenerationFlowController {
             failGeneration(generationId, failedAssistantId, host.formatModelFailed(error.getMessage()));
             return;
         }
-        int nextAttempt = failedAttempt + 1;
-        if (nextAttempt >= MAX_RETRIES) {
+        int nextAttempt = retryAttemptAfterFailure(failedAttempt);
+        boolean permanentError = error != null
+                && error.getStatusCode() >= 0
+                && !RetryPolicy.isRetryableStatusCode(error.getStatusCode());
+        if (permanentError || nextAttempt < 0) {
+            // Permanent HTTP errors (401/403/404/...) fail immediately; exhausted
+            // retries fail after MAX_RETRIES attempts instead of looping forever.
             failGeneration(generationId, failedAssistantId, host.formatModelFailed(error.getMessage()));
             return;
         }
-
+        final int attempt = nextAttempt;
         mainThread.post(() -> {
             if (cancellationToken != null && cancellationToken.isCancelled()) {
                 return;
@@ -435,19 +441,29 @@ final class GenerationFlowController {
             }
             streamingRenderController.removeRawText(failedAssistantId);
 
-            String retryText = host.formatRetryNotice(nextAttempt + 1, MAX_RETRIES, error.getMessage());
+            String retryText = host.formatRetryNotice(attempt, MAX_RETRIES, error.getMessage());
             messages.add(ChatMessage.retryNotice(host.nextId(), retryText));
             host.persistCurrentConversation();
             host.render();
 
+            long delayMs = RetryPolicy.delayWithJitterMs(attempt);
             mainThread.postDelayed(() -> {
                 if (cancellationToken != null && cancellationToken.isCancelled()) {
                     return;
                 }
                 retryableModelStream(generationId, selectedModel, cancellationToken,
-                        requestMessages, usedToolCallCount, nextAttempt, userInput);
-            }, RETRY_DELAY_MS);
+                        requestMessages, usedToolCallCount, attempt, userInput);
+            }, delayMs);
         });
+    }
+
+    /**
+     * Next 1-based retry attempt after {@code failedAttempt} (initial request
+     * is attempt 0), or -1 when MAX_RETRIES have been exhausted.
+     */
+    static int retryAttemptAfterFailure(int failedAttempt) {
+        int nextAttempt = failedAttempt + 1;
+        return nextAttempt > MAX_RETRIES ? -1 : nextAttempt;
     }
 
     void handleToolReview(String state) {
@@ -542,6 +558,12 @@ final class GenerationFlowController {
 
     void clearSessionAutoToolConfirmations() {
         toolConfirmationController.clearSessionAutoToolConfirmations();
+    }
+
+    void clearAgentResultRegistry() {
+        if (agentExecutionController != null) {
+            agentExecutionController.getAgentResultRegistry().clearAll();
+        }
     }
 
     void scheduleAgentProgressRender(AgentProgressSession session) {
@@ -785,6 +807,7 @@ final class GenerationFlowController {
                 .progressListener((toolCallId, toolName, content, error) ->
                         postToolProgress(generationId, cancellationToken, toolCallId, toolName, content, error))
                 .todoStateStore(todoStateStore)
+                .stringResolver(stringResolver)
                 .agentResultStore(agentExecutionController == null
                         ? null
                         : agentExecutionController.getAgentResultRegistry())
@@ -794,6 +817,10 @@ final class GenerationFlowController {
 
     void setBypassPathProtectionSupplier(java.util.function.BooleanSupplier supplier) {
         this.bypassPathProtectionSupplier = supplier != null ? supplier : () -> false;
+    }
+
+    void setStringResolver(ToolContext.StringResolver resolver) {
+        this.stringResolver = resolver;
     }
 
     private boolean isBypassPathProtection() {

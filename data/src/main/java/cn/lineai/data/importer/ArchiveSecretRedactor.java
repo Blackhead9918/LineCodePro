@@ -87,6 +87,8 @@ class ArchiveSecretRedactor {
         try {
             redacted = new JSONObject(snapshot.toString());
         } catch (Exception ignored) {
+            // Practically unreachable: JSONObject.toString() output always reparses.
+            // Returning the original avoids data loss in that pathological case.
             return snapshot;
         }
         JSONObject tables = redacted.optJSONObject("tables");
@@ -213,6 +215,7 @@ class ArchiveSecretRedactor {
             }
             return array.toString();
         } catch (Exception ignored) {
+            // Fail-closed: unparseable header JSON is exported redacted, never with secrets.
             return REDACTED;
         }
     }
@@ -226,6 +229,8 @@ class ArchiveSecretRedactor {
             redactRecursive(parsed);
             return parsed.toString();
         } catch (Exception ignored) {
+            // Unparseable raw JSON: redact only when the content itself looks sensitive;
+            // the keyword check also covers "Authorization: Bearer ..." style values.
             return isSensitiveName(raw) ? REDACTED : raw;
         }
     }
@@ -243,6 +248,7 @@ class ArchiveSecretRedactor {
             }
             return object.toString();
         } catch (Exception ignored) {
+            // Fail-closed: unparseable value is exported empty rather than risking a secret.
             return REDACTED;
         }
     }
@@ -288,6 +294,7 @@ class ArchiveSecretRedactor {
         try {
             cell.put("value", value == null ? "" : value);
         } catch (Exception ignored) {
+            // Defensive: cell values are Strings; put() cannot fail in practice.
         }
     }
 

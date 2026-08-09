@@ -83,6 +83,7 @@ public final class SshCommandExecutor {
                 try {
                     channel.getExitStatus();
                 } catch (Exception ignored) {
+                    // getExitStatus can throw before the channel is connected; keep polling.
                 }
                 try {
                     Thread.sleep(20L);
@@ -160,6 +161,8 @@ public final class SshCommandExecutor {
                     }
                 }
             } catch (Exception ignored) {
+                // Best-effort: a closed/errored channel ends the read loop; output so far
+                // is kept and the exit status check below decides success/failure.
             } finally {
                 done.countDown();
             }
@@ -184,6 +187,7 @@ public final class SshCommandExecutor {
             try {
                 channel.getExitStatus();
             } catch (Exception ignored) {
+                // Same poll pattern as above: ignore pre-connection channel state.
             }
             try {
                 Thread.sleep(20L);

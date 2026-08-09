@@ -30,6 +30,11 @@ public final class ToolNames {
     public static final String PHONE_LONG_PRESS = "phone_long_press";
     public static final String PHONE_VIEW_HIERARCHY = "phone_view_hierarchy";
     public static final String PHONE_GLOBAL_ACTION = "phone_global_action";
+    public static final String GIT_STATUS = "git_status";
+    public static final String GIT_DIFF = "git_diff";
+    public static final String GIT_LOG = "git_log";
+    public static final String GIT_COMMIT = "git_commit";
+    public static final String GIT_PUSH = "git_push";
 
     private static final String CUSTOM_AGENT_PREFIX = "agentx_";
     private static final String CUSTOM_MCP_PREFIX = "mcpx_";

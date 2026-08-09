@@ -161,6 +161,14 @@
     <string name="tool_shell_ssh_not_init">当前环境未初始化 SSH 服务。</string>
     <string name="tool_shell_output_line_count">(总行数: %1$d)\n</string>
 
+    <!-- GitTool -->
+    <string name="tool_call_action_git_status">Git 状态</string>
+    <string name="tool_call_action_git_diff">Git 差异</string>
+    <string name="tool_call_action_git_log">Git 日志</string>
+    <string name="tool_call_action_git_commit">Git 提交</string>
+    <string name="tool_call_action_git_push">Git 推送</string>
+    <string name="tool_git_commit_message_empty">提交信息不能为空。</string>
+
     <!-- FileToolPathPolicy -->
     <string name="tool_path_policy_context_empty">工具上下文为空</string>
     <string name="tool_path_policy_home_empty">工作区路径为空</string>

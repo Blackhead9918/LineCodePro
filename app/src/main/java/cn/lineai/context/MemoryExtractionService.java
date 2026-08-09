@@ -1,5 +1,6 @@
 package cn.lineai.context;
 
+import android.util.Log;
 import cn.lineai.R;
 import cn.lineai.ai.ModelClient;
 import cn.lineai.ai.ModelCompletionResponse;
@@ -22,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public final class MemoryExtractionService {
+    private static final String TAG = "MemoryExtraction";
     private static final int MAX_TRANSCRIPT_CHARS = 6000;
     private static final int MAX_MEMORY_CHARS = 320;
     private static final int MAX_MEMORIES = 3;
@@ -55,7 +57,8 @@ public final class MemoryExtractionService {
             modelAttempted = true;
             try {
                 candidates.addAll(extractWithModel(selectedModel, projectId, userInput, transcript));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.w(TAG, "model memory extraction failed, falling back to rules", e);
             }
         }
         // Rules only fill gaps: skip when the model already returned durable candidates.
@@ -107,7 +110,8 @@ public final class MemoryExtractionService {
                 }
                 extensionRepository.createSkill(projectId, skill.location, skill.name, skill.description, skill.content);
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Log.w(TAG, "skill extraction failed", e);
         }
     }
 
@@ -142,7 +146,8 @@ public final class MemoryExtractionService {
                     skills.add(new ExtractedSkill(name, description, location, content));
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Log.w(TAG, "skill candidate parse failed", e);
         }
         return skills;
     }
@@ -195,7 +200,8 @@ public final class MemoryExtractionService {
                 double confidence = item.optDouble("confidence", MODEL_DEFAULT_CONFIDENCE);
                 addIfValid(candidates, scope, content, confidence);
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Log.w(TAG, "memory candidate parse failed", e);
         }
         return candidates;
     }
@@ -224,14 +230,10 @@ public final class MemoryExtractionService {
         // Prefer explicit user statements; transcript only fills when user input is empty.
         String primary = safeStatic(userInput).trim().length() > 0 ? userInput : transcript;
         String normalized = compactSpaces(primary);
-        String lower = normalized.toLowerCase(Locale.ROOT);
 
-        if (containsAny(lower, "androidx", "android x")
-                && containsAny(normalized, "不用", "不要用", "不能用", "不能使用", "禁止使用", "不能依赖")
-                && hasProjectCue(normalized)) {
-            addIfValid(candidates, MemoryOverviewState.Memory.SCOPE_PROJECT, "当前项目不能使用 AndroidX。", 0.95);
-        }
-
+        // Store the user's own words only - never inject fabricated seed content.
+        // The generic sentence loop below already captures AndroidX-style constraints
+        // verbatim (e.g. "这个项目不能用 AndroidX 库") with the right scope.
         for (String sentence : splitSentences(normalized)) {
             if (candidates.size() >= MAX_MEMORIES) {
                 break;

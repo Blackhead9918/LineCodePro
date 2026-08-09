@@ -9,15 +9,27 @@ import org.junit.Test;
 
 public final class MemoryExtractionServiceTest {
     @Test
-    public void projectAndroidXConstraintUsesProjectScope() {
+    public void projectConstraintStoresUsersOwnWordsWithProjectScope() {
         List<MemoryExtractionService.ExtractedMemory> candidates = MemoryExtractionService.ruleBasedCandidates(
-                "做自动提取，另外区分作用域，比如这个项目不能用AndroidX，就保存到项目，而不是全局",
+                "这个项目不能用 AndroidX 库",
                 ""
         );
 
         assertTrue(candidates.size() > 0);
         assertEquals(MemoryOverviewState.Memory.SCOPE_PROJECT, candidates.get(0).scope);
-        assertEquals("当前项目不能使用 AndroidX。", candidates.get(0).content);
+        // Never inject fabricated seed content; the user's own statement is kept verbatim.
+        assertEquals("这个项目不能用 AndroidX 库", candidates.get(0).content);
+    }
+
+    @Test
+    public void noFabricatedAndroidXSeedWithoutUserStatement() {
+        // A transcript mention alone (no durable user statement) must not produce a seed memory.
+        List<MemoryExtractionService.ExtractedMemory> candidates = MemoryExtractionService.ruleBasedCandidates(
+                "",
+                "提到 androidx 与当前项目"
+        );
+
+        assertTrue(candidates.isEmpty());
     }
 
     @Test

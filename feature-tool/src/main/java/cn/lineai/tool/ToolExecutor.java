@@ -112,6 +112,7 @@ public final class ToolExecutor {
                 .extraWriteRoots(context.getExtraWriteRoots())
                 .agentRunner(context.getAgentRunner())
                 .toolCallId(context.getToolCallId())
+                .progressListener(context.getProgressListener())
                 .todoStateStore(context.getTodoStateStore())
                 .learningContextStore(context.getLearningContextStore() != null ? context.getLearningContextStore() : learningContextStore)
                 .toolSettingsStore(context.getToolSettingsStore() != null ? context.getToolSettingsStore() : settingsRepository)
@@ -120,6 +121,9 @@ public final class ToolExecutor {
                 .modelServiceProvider(context.getModelServiceProvider() != null ? context.getModelServiceProvider() : modelServiceProvider)
                 .promptTemplateRepository(context.getPromptTemplateRepository() != null ? context.getPromptTemplateRepository() : promptTemplateRepository)
                 .bypassPathProtection(context.isBypassPathProtection())
+                .appContext(context.getAndroidContext())
+                .stringResolver(context.getStringResolver())
+                .agentResultStore(context.getAgentResultStore())
                 .build();
     }
 

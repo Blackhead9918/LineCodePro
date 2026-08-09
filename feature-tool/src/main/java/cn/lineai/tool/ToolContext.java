@@ -127,6 +127,14 @@ public final class ToolContext {
         return agentResultStore;
     }
 
+    public ProgressListener getProgressListener() {
+        return progressListener;
+    }
+
+    public StringResolver getStringResolver() {
+        return stringResolver;
+    }
+
     public static final class Builder {
         private String homePath;
         private List<String> extraWriteRoots;

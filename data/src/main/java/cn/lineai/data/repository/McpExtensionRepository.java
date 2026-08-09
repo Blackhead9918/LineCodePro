@@ -141,6 +141,7 @@ public final class McpExtensionRepository extends BaseRepository {
                 item.put("value", header.getValue());
                 array.put(item);
             } catch (Exception ignored) {
+                // Defensive: name/value are plain strings; put() cannot fail in practice.
             }
         }
         return array;
@@ -157,6 +158,7 @@ public final class McpExtensionRepository extends BaseRepository {
                 }
             }
         } catch (Exception ignored) {
+            // Corrupt stored headers JSON must not crash app startup - treated as no headers.
         }
         return headers;
     }
@@ -180,6 +182,7 @@ public final class McpExtensionRepository extends BaseRepository {
                 }
                 array.put(item);
             } catch (Exception ignored) {
+                // A malformed stored inputSchema is skipped; the tool itself is still saved.
             }
         }
         return array;
@@ -189,6 +192,7 @@ public final class McpExtensionRepository extends BaseRepository {
         try {
             return parseToolList(safe(raw).length() == 0 ? new JSONArray() : new JSONArray(raw));
         } catch (Exception ignored) {
+            // Corrupt stored tools JSON must not crash app startup - treated as no tools.
             return new ArrayList<>();
         }
     }

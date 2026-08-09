@@ -1,5 +1,7 @@
 <resources>
         <string name="common_cancel">取消</string>
+    <string name="tool_group_git_name">Git</string>
+    <string name="tool_group_git_desc">通过 SSH 或终端提供者执行 git status、diff、commit 和 push</string>
     <string name="common_delete">删除</string>
     <string name="app_name">LineCode Pro</string>
     <string name="status_title_message">%1$s\n%2$s</string>

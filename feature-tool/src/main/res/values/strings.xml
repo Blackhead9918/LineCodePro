@@ -161,6 +161,14 @@
     <string name="tool_shell_ssh_not_init">SSH service not initialized in the current environment.</string>
     <string name="tool_shell_output_line_count">(Total lines: %1$d)\n</string>
 
+    <!-- GitTool -->
+    <string name="tool_call_action_git_status">Git status</string>
+    <string name="tool_call_action_git_diff">Git diff</string>
+    <string name="tool_call_action_git_log">Git log</string>
+    <string name="tool_call_action_git_commit">Git commit</string>
+    <string name="tool_call_action_git_push">Git push</string>
+    <string name="tool_git_commit_message_empty">Commit message cannot be empty.</string>
+
     <!-- FileToolPathPolicy -->
     <string name="tool_path_policy_context_empty">Tool context is empty</string>
     <string name="tool_path_policy_home_empty">Workspace path is empty</string>

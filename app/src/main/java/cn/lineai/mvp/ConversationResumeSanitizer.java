@@ -126,6 +126,8 @@ final class ConversationResumeSanitizer {
             }
             return new SanitizedPayload(content, false, false);
         } catch (Exception ignored) {
+            // Best-effort by design: tool messages often carry plain text (shell output,
+            // errors) that is not JSON. Pass the original content through unchanged.
             return new SanitizedPayload(content, false, false);
         }
     }
@@ -310,6 +312,7 @@ final class ConversationResumeSanitizer {
                 calls.add(new ToolCall(id, item.optString("name"), item.optString("arguments", "{}")));
             }
         } catch (Exception ignored) {
+            // Best-effort: a corrupt rawJson must not block resume - just no calls to recover.
         }
         return calls;
     }
@@ -356,6 +359,7 @@ final class ConversationResumeSanitizer {
         try {
             return new JSONObject(rawJson).optString(key);
         } catch (Exception ignored) {
+            // Best-effort: corrupt rawJson yields an empty value, never fails the resume flow.
             return "";
         }
     }
@@ -368,6 +372,7 @@ final class ConversationResumeSanitizer {
             object.put(key, value == null ? "" : value);
             return object.toString();
         } catch (Exception ignored) {
+            // Best-effort: keep the original rawJson when it cannot be rewritten.
             return rawJson == null ? "" : rawJson;
         }
     }

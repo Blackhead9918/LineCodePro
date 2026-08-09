@@ -342,5 +342,7 @@ public final class ToolBuiltinsTest {
         Assert.assertEquals(cn.lineai.tool.ui.ToolCallTodoView.class, new TodoUpdateTool().getToolCallViewClass());
         Assert.assertNull(new WebFetchTool().getToolCallViewClass());
         Assert.assertNull(new WebSearchTool(new cn.lineai.data.repository.WebSearchConfigRepository(null)).getToolCallViewClass());
+        Assert.assertEquals(cn.lineai.tool.ui.ToolCallShellView.class,
+                new cn.lineai.tool.builtin.GitTool(cn.lineai.tool.builtin.GitTool.NAME_STATUS, null, null).getToolCallViewClass());
     }
 }

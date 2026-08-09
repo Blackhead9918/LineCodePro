@@ -1,5 +1,15 @@
 # 更新日志
 
+## v1.2.6 (未发布)
+
+### 内置 Git 工具
+
+- **新增 `GitTool`** - 5 个内置工具实例：`git_status` / `git_diff` / `git_log`（只读、无需确认、只读模式可用）与 `git_commit` / `git_push`（写入、需要用户确认、只读模式自动拦截）
+- **复用 shell 执行链路** - Git 命令通过内部 `ShellExecuteTool` 委托执行，与 `shell_execute` 共用 SSH / 终端提供者（Termux IPC）路由、流式进度与输出截断；命令默认在工作区根目录运行
+- **安全命令构造** - `git add [paths]`、`git commit -m <message>`、`git push [remote] [branch]`、`git log --oneline [--max-count]` 等参数全部 shell-quote，避免注入；支持 `--cached` / `--stat` / `--allow-empty` 等选项
+- **注册与设置** - `ToolNames` 新增 `GIT_*` 常量；`BuiltInToolProviders` 注册 5 个实例；工具设置新增「Git」分组（仅 SSH / 终端提供者模式可用）；工具调用卡片复用 shell 视图，command 为空时显示真实工具名
+- **测试** - 新增 `GitToolTest`（命令构造、message 必填校验、权限标志、分类、名称稳定性）
+
 ## v1.2.5
 
 ### 工具调用 UI 模块化重构

@@ -11,6 +11,15 @@ import org.junit.Test;
 
 public final class GenerationFlowControllerTest {
     @Test
+    public void retryAttemptsStartAtOneAndStopAfterMaxRetries() {
+        Assert.assertEquals(1, GenerationFlowController.retryAttemptAfterFailure(0));
+        Assert.assertEquals(2, GenerationFlowController.retryAttemptAfterFailure(1));
+        Assert.assertEquals(3, GenerationFlowController.retryAttemptAfterFailure(2));
+        Assert.assertEquals(-1, GenerationFlowController.retryAttemptAfterFailure(3));
+        Assert.assertEquals(-1, GenerationFlowController.retryAttemptAfterFailure(4));
+    }
+
+    @Test
     public void agentHostToolResultDispatchesToOuterControllerOnce() {
         ArrayList<ChatMessage> messages = new ArrayList<>();
         ToolMessageController toolMessages = new ToolMessageController(messages, new IncrementingIdProvider());

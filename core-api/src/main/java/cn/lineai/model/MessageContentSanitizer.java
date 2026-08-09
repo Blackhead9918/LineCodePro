@@ -32,6 +32,7 @@ public final class MessageContentSanitizer {
                     return modelContent.trim().length() > 0 ? modelContent : "Image generated and displayed in conversation.";
                 }
             } catch (Exception ignored) {
+                // Fail-soft: content is not the expected generation JSON; show the generic fallback.
                 return "Image generated and displayed in conversation.";
             }
         }
@@ -50,6 +51,7 @@ public final class MessageContentSanitizer {
             String output = object.optString("output");
             return output.trim().length() > 0 ? output : "Agent is still running, final result not yet generated.";
         } catch (Exception ignored) {
+            // Best-effort: non-JSON tool content passes through with inline images stripped.
             return stripInlineDataImages(content);
         }
     }
@@ -61,6 +63,7 @@ public final class MessageContentSanitizer {
                 return object.optString("display_markdown").trim();
             }
         } catch (Exception ignored) {
+            // Best-effort: display-only lookup; non-JSON content yields no markdown.
         }
         return "";
     }

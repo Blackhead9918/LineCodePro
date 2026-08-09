@@ -62,6 +62,7 @@ final class ToolExecutionScheduler {
             for (int i = 0; i < futures.size(); i++) {
                 ToolCall call = concurrentCalls.get(i);
                 if (cancellationToken != null && cancellationToken.isCancelled()) {
+                    cancelRemainingFutures(futures);
                     return new ToolExecutionBatch(new ArrayList<>(), null, new ArrayList<>());
                 }
                 try {
@@ -91,6 +92,14 @@ final class ToolExecutionScheduler {
         }
 
         return new ToolExecutionBatch(toolRunController.orderedResults(toolCalls, resultById), null, new ArrayList<>());
+    }
+
+    private static void cancelRemainingFutures(ArrayList<Future<ToolResult>> futures) {
+        for (Future<ToolResult> future : futures) {
+            if (future != null && !future.isDone()) {
+                future.cancel(true);
+            }
+        }
     }
 
     ToolResult executeConfirmed(ToolCall call, ToolContext context) {

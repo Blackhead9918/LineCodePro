@@ -28,6 +28,7 @@ import cn.lineai.model.ModelConfig;
 import cn.lineai.model.ModelStore;
 import cn.lineai.model.SheetOption;
 import cn.lineai.mvp.agent.AgentExecutionController;
+import cn.lineai.tool.ToolContext;
 import cn.lineai.tool.ToolExecutor;
 import cn.lineai.tool.ToolExecutionCoordinator;
 import cn.lineai.tool.ToolRegistry;
@@ -492,6 +493,7 @@ final class MainControllerInitializer {
                     @Override
                     public void clearCurrentConversation() {
                         coordinator.generationFlowController.clearSessionAutoToolConfirmations();
+                        coordinator.generationFlowController.clearAgentResultRegistry();
                         coordinator.resetTodoState();
                     }
 
@@ -567,6 +569,7 @@ final class MainControllerInitializer {
                 (cn.lineai.data.repository.ExtensionRepository) extensionRepository,
                 promptTemplateRepository
         );
+        coordinator.agentExecutionController.setContext(context);
         coordinator.generationFlowController = new GenerationFlowController(
                 messages,
                 chatSessionStore,
@@ -589,6 +592,18 @@ final class MainControllerInitializer {
                 new GenerationFlowHost(coordinator)
         );
         coordinator.generationLifecycleController.setGenerationFlowController(coordinator.generationFlowController);
+        ToolContext.StringResolver stringResolver = new ToolContext.StringResolver() {
+            @Override
+            public String getString(int resId) {
+                return context.getString(resId);
+            }
+
+            @Override
+            public String getString(int resId, Object... formatArgs) {
+                return context.getString(resId, formatArgs);
+            }
+        };
+        coordinator.generationFlowController.setStringResolver(stringResolver);
         java.util.function.BooleanSupplier bypassSupplier = () -> outputSettingsRepository.isPathProtectionBypassed();
         coordinator.agentExecutionController.setBypassPathProtectionSupplier(bypassSupplier);
         coordinator.generationFlowController.setBypassPathProtectionSupplier(bypassSupplier);

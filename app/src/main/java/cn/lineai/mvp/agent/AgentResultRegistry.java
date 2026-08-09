@@ -109,6 +109,17 @@ public final class AgentResultRegistry implements ToolContext.AgentResultStore {
         }
     }
 
+    /**
+     * Releases every stored agent result (full outputs included).
+     * Called when the active conversation changes so records from the previous
+     * conversation do not accumulate in memory for the whole app session.
+     */
+    public void clearAll() {
+        synchronized (lock) {
+            records.clear();
+        }
+    }
+
     public static String toCompactJson(AgentResultRecord record) {
         if (record == null) {
             return "{}";

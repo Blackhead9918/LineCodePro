@@ -131,6 +131,7 @@ public final class MessageRecord {
                 ));
             }
         } catch (Exception ignored) {
+            // Corrupt rawJson must not crash resume - treated as no tool calls.
         }
         return calls;
     }
@@ -142,6 +143,7 @@ public final class MessageRecord {
         try {
             return new JSONObject(rawJson).optString(key);
         } catch (Exception ignored) {
+            // Corrupt rawJson yields an empty value, never fails message reconstruction.
             return "";
         }
     }
@@ -173,6 +175,7 @@ public final class MessageRecord {
                 ));
             }
         } catch (Exception ignored) {
+            // Corrupt rawJson must not crash resume - treated as no attachments.
         }
         return attachments;
     }

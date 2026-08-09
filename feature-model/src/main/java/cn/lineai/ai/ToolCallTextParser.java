@@ -9,6 +9,12 @@ import java.util.regex.Pattern;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+/**
+ * Best-effort parser for tool calls embedded in model text (XML tags, JSON, fenced
+ * JSON). The parser is intentionally resilient: malformed or partial model output
+ * must never break the stream - all JSON/XML parse failures are treated as "no tool
+ * call at this position" and the surrounding text is preserved.
+ */
 public final class ToolCallTextParser {
     private static final Pattern TOOL_CALLS_TAG = Pattern.compile(
             "<tool_calls\\b[^>]*>(.*?)</tool_calls>",
@@ -115,6 +121,7 @@ public final class ToolCallTextParser {
                 parseObject(new JSONObject(normalized), calls);
             }
         } catch (Exception ignored) {
+            // Best-effort: unparseable payload -> no tool calls, keep the text as-is.
         }
     }
 

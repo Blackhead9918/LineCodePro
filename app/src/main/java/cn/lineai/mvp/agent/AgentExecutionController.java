@@ -150,6 +150,23 @@ public final class AgentExecutionController {
         return context != null ? context.getString(resId) : fallback;
     }
 
+    private ToolContext.StringResolver stringResolver() {
+        if (context == null) {
+            return null;
+        }
+        return new ToolContext.StringResolver() {
+            @Override
+            public String getString(int resId) {
+                return context.getString(resId);
+            }
+
+            @Override
+            public String getString(int resId, Object... formatArgs) {
+                return context.getString(resId, formatArgs);
+            }
+        };
+    }
+
     public void setBypassPathProtectionSupplier(java.util.function.BooleanSupplier supplier) {
         this.bypassPathProtectionSupplier = supplier != null ? supplier : () -> false;
     }
@@ -158,6 +175,7 @@ public final class AgentExecutionController {
         try {
             return bypassPathProtectionSupplier.getAsBoolean();
         } catch (Exception ignored) {
+            // Fail-safe: a supplier error must never silently enable path-protection bypass.
             return false;
         }
     }
@@ -266,6 +284,8 @@ public final class AgentExecutionController {
                 progressJson = progress.snapshotResult().getContent();
             }
         } catch (Exception ignored) {
+            // Best-effort: a snapshot failure drops only the progress-card JSON;
+            // the fullOutput is still recorded in the registry below.
         }
         agentResultRegistry.updateFullOutput(
                 agentId,
@@ -336,6 +356,8 @@ public final class AgentExecutionController {
                             }
                         }
                     } catch (Exception ignored) {
+                        // Best-effort: non-JSON payloads (e.g. plain summaries) default to
+                        // "running"; the final pipeline state is published separately.
                     }
                     host.addOrReplaceToolResult(ToolResult.withReview(id, name, payload, nextError, "", reviewState, ""));
                     host.render();
@@ -898,6 +920,8 @@ public final class AgentExecutionController {
                 .homePath(homePath)
                 .extraWriteRoots(skillWriteRoots(homePath))
                 .toolCallId("")
+                .stringResolver(stringResolver())
+                .agentResultStore(agentResultRegistry)
                 .bypassPathProtection(isBypassPathProtection())
                 .build();
         ToolResult scopeError = validateAgentWriteScope(call, type, writeScope, context);

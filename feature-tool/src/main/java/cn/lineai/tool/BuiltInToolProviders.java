@@ -10,6 +10,7 @@ import cn.lineai.tool.builtin.AgentPipelineTool;
 import cn.lineai.tool.builtin.AgentTool;
 import cn.lineai.tool.builtin.FileDeleteTool;
 import cn.lineai.tool.builtin.FileEditTool;
+import cn.lineai.tool.builtin.GitTool;
 import cn.lineai.tool.builtin.FileReadTool;
 import cn.lineai.tool.builtin.FileWriteTool;
 import cn.lineai.tool.builtin.GlobTool;
@@ -64,6 +65,12 @@ public final class BuiltInToolProviders {
         list.add((context, ipc) -> new PhoneGlobalActionTool(context));
         // Tools that need the application context.
         list.add((context, ipc) -> new ShellExecuteTool(context, ipc));
+        // Git tools execute through the same shell target (SSH / terminal provider).
+        list.add((context, ipc) -> new GitTool(GitTool.NAME_STATUS, context, ipc));
+        list.add((context, ipc) -> new GitTool(GitTool.NAME_DIFF, context, ipc));
+        list.add((context, ipc) -> new GitTool(GitTool.NAME_LOG, context, ipc));
+        list.add((context, ipc) -> new GitTool(GitTool.NAME_COMMIT, context, ipc));
+        list.add((context, ipc) -> new GitTool(GitTool.NAME_PUSH, context, ipc));
         list.add((context, ipc) -> new ImageUnderstandingTool(context, ipc));
         list.add((context, ipc) -> new ImageGenerationTool(context));
         // WebSearchTool needs its own config repository.

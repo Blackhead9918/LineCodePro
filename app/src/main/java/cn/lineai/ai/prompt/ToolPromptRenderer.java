@@ -68,6 +68,7 @@ public class ToolPromptRenderer {
                     try {
                         builder.append("    Parameters: ").append(tool.getParameters().toString()).append('\n');
                     } catch (Exception ignored) {
+                        // A broken tool must not break the whole prompt: parameters degrade to {}.
                         builder.append("    Parameters: {}\n");
                     }
                 } else {
@@ -138,6 +139,7 @@ public class ToolPromptRenderer {
                     try {
                         builder.append("    Parameters: ").append(tool.getParameters().toString()).append('\n');
                     } catch (Exception ignored) {
+                        // A broken tool must not break the whole prompt: parameters degrade to {}.
                         builder.append("    Parameters: {}\n");
                     }
                 } else {
@@ -188,6 +190,7 @@ public class ToolPromptRenderer {
                 try {
                     builder.append("    Parameters: ").append(tool.getParameters().toString()).append('\n');
                 } catch (Exception ignored) {
+                    // A broken tool must not break the whole prompt: parameters degrade to {}.
                     builder.append("    Parameters: {}\n");
                 }
             } else {

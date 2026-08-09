@@ -1,5 +1,7 @@
 <resources>
         <string name="common_cancel">Cancel</string>
+    <string name="tool_group_git_name">Git</string>
+    <string name="tool_group_git_desc">Run git status, diff, commit and push via SSH or terminal provider</string>
     <string name="common_delete">Delete</string>
     <string name="app_name">LineCode Pro</string>
     <string name="status_title_message">%1$s\n%2$s</string>

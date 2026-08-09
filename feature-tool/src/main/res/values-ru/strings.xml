@@ -161,6 +161,14 @@
     <string name="tool_shell_ssh_not_init">SSH сервис не инициализирован в текущей среде.</string>
     <string name="tool_shell_output_line_count">(Всего строк: %1$d)\n</string>
 
+    <!-- GitTool -->
+    <string name="tool_call_action_git_status">Git-статус</string>
+    <string name="tool_call_action_git_diff">Git-diff</string>
+    <string name="tool_call_action_git_log">Git-log</string>
+    <string name="tool_call_action_git_commit">Git-коммит</string>
+    <string name="tool_call_action_git_push">Git-push</string>
+    <string name="tool_git_commit_message_empty">Сообщение коммита не может быть пустым.</string>
+
     <!-- FileToolPathPolicy -->
     <string name="tool_path_policy_context_empty">Контекст инструмента пуст</string>
     <string name="tool_path_policy_home_empty">Путь рабочей области пуст</string>

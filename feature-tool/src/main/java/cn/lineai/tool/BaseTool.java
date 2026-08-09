@@ -7,6 +7,7 @@ import org.json.JSONObject;
 public abstract class BaseTool implements ToolInfo {
     // Icon constants for getActionIcon(), values matching IconButtonView in the app module.
     public static final int ICON_EXPAND = 36;
+    public static final int ICON_SCROLL_TEXT = 37;
     public static final int ICON_SEARCH = 65;
     public static final int ICON_GLOBE = 39;
     public static final int ICON_FOLDER_OPEN = 9;

@@ -1,5 +1,7 @@
 <resources>
         <string name="common_cancel">Отмена</string>
+    <string name="tool_group_git_name">Git</string>
+    <string name="tool_group_git_desc">Выполнение git status, diff, commit и push через SSH или терминальный провайдер</string>
     <string name="common_delete">Удалить</string>
     <string name="app_name">LineCode Pro</string>
     <string name="status_title_message">%1$s\n%2$s</string>

@@ -71,7 +71,7 @@ abstract class AbstractHttpModelProtocol implements ModelProtocol {
             }
             response = readAll(code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream());
             if (code < 200 || code >= 300) {
-                ModelCompletionException exception = new ModelCompletionException("HTTP " + code + ": " + response);
+                ModelCompletionException exception = new ModelCompletionException("HTTP " + code + ": " + response, code);
                 logHttpError("http", url, headers, body, code, response, exception);
                 throw exception;
             }
@@ -115,7 +115,7 @@ abstract class AbstractHttpModelProtocol implements ModelProtocol {
             code = connection.getResponseCode();
             if (code < 200 || code >= 300) {
                 response = readAll(connection.getErrorStream());
-                ModelCompletionException exception = new ModelCompletionException("HTTP " + code + ": " + response);
+                ModelCompletionException exception = new ModelCompletionException("HTTP " + code + ": " + response, code);
                 logHttpError("sse_http", url, headers, body, code, response, exception);
                 throw exception;
             }

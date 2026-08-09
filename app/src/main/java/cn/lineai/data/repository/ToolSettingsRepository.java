@@ -104,6 +104,12 @@ public final class ToolSettingsRepository implements ToolSettingsStore {
                 true,
                 new String[] {ToolNames.SHELL_EXECUTE},
                 MODE_REMOTE, "shell"));
+        configs.add(new McpToolConfig("git",
+                resourceProvider.getString(R.string.tool_group_git_name),
+                resourceProvider.getString(R.string.tool_group_git_desc),
+                true,
+                new String[] {ToolNames.GIT_STATUS, ToolNames.GIT_DIFF, ToolNames.GIT_LOG, ToolNames.GIT_COMMIT, ToolNames.GIT_PUSH},
+                MODE_REMOTE, "git"));
         configs.add(new McpToolConfig(ToolNames.WEB_SEARCH,
                 resourceProvider.getString(R.string.tool_group_web_search_name),
                 resourceProvider.getString(R.string.tool_group_web_search_desc),

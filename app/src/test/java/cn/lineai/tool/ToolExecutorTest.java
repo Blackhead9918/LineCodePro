@@ -31,6 +31,79 @@ public final class ToolExecutorTest {
         Assert.assertFalse(result.getContent().contains("null"));
     }
 
+    @Test
+    public void injectedDependenciesPreserveProgressListenerAgentResultStoreAndStringResolver() {
+        ToolRegistry registry = new ToolRegistry();
+        CapturingTool tool = new CapturingTool();
+        registry.register(tool);
+        ToolExecutor executor = new ToolExecutor(registry, new AllowAllToolSettingsStore(), null, null, null, null, null);
+
+        ToolContext.ProgressListener progressListener = (toolCallId, toolName, content, error) -> {
+        };
+        ToolContext.AgentResultStore agentResultStore = agentId -> null;
+        ToolContext.StringResolver stringResolver = new ToolContext.StringResolver() {
+            @Override
+            public String getString(int resId) {
+                return "resolved-" + resId;
+            }
+
+            @Override
+            public String getString(int resId, Object... formatArgs) {
+                return "resolved-" + resId;
+            }
+        };
+        // Context deliberately lacks toolSettingsStore/modelRepository/modelServiceProvider/learningContextStore
+        // so ToolExecutor must run injectDependencies — mirroring GenerationFlowController.toolContext().
+        ToolContext context = ToolContext.builder()
+                .homePath("/workspace")
+                .progressListener(progressListener)
+                .agentResultStore(agentResultStore)
+                .stringResolver(stringResolver)
+                .build();
+
+        ToolResult result = executor.execute(new ToolCall("call_1", "capturing_tool", "{}"), context);
+
+        Assert.assertFalse(result.isError());
+        ToolContext seen = tool.lastContext;
+        Assert.assertNotNull(seen);
+        Assert.assertSame("progressListener must survive injectDependencies", progressListener, seen.getProgressListener());
+        Assert.assertSame("agentResultStore must survive injectDependencies", agentResultStore, seen.getAgentResultStore());
+        Assert.assertSame("stringResolver must survive injectDependencies", stringResolver, seen.getStringResolver());
+        Assert.assertEquals("/workspace", seen.getHomePath());
+        Assert.assertEquals("resolved-7", seen.getString(7));
+        Assert.assertNotNull("toolSettingsStore must be injected", seen.getToolSettingsStore());
+    }
+
+    private static final class CapturingTool extends BaseTool {
+        ToolContext lastContext;
+
+        @Override
+        public String getName() {
+            return "capturing_tool";
+        }
+
+        @Override
+        public String getDescription() {
+            return "Captures the ToolContext it receives.";
+        }
+
+        @Override
+        public ToolCategory getCategory() {
+            return ToolCategory.READ;
+        }
+
+        @Override
+        public JSONObject getParameters() {
+            return new JSONObject();
+        }
+
+        @Override
+        public ToolResult execute(JSONObject input, ToolContext context) {
+            this.lastContext = context;
+            return ToolResult.success("captured");
+        }
+    }
+
     private static final class ThrowingTool extends BaseTool {
         @Override
         public String getName() {

@@ -880,6 +880,7 @@ public final class MainCoordinator implements MainUiController {
 
     void reloadAfterLineCodeImport() {
         toolRegistry.reloadExtensions();
+        generationFlowController.clearAgentResultRegistry();
         applyProject(projectRepository.ensureSelectedProjectPath(toolSettingsRepository.getExecutionMode()));
         sshFileTreeController.invalidateFileTree();
         ipcFileTreeController.invalidateFileTree();
@@ -1045,6 +1046,7 @@ public final class MainCoordinator implements MainUiController {
     void loadConversation(String id) {
         conversationPersistenceController.loadConversation(id);
         contextCompactionController.onConversationChanged();
+        generationFlowController.clearAgentResultRegistry();
         chatInteractionController.resetModelTracking();
     }
 
