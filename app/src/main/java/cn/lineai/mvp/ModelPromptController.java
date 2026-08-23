@@ -39,6 +39,15 @@ final class ModelPromptController {
     interface Host {
         String syncModePermission();
 
+        /**
+         * LCP-Harness v1 (§30.1 aturan 2): active task capsule rendered for the P0
+         * system-prompt region. Empty string when no task is active (D10 —
+         * conversation without a task behaves exactly as before).
+         */
+        default String taskCapsulePrompt() {
+            return "";
+        }
+
         String projectPath();
 
         String projectSource();
@@ -134,7 +143,11 @@ final class ModelPromptController {
         String promptHomePath = promptHomePath();
         String extensionContext = extensionRepository.buildExtensionPrompt(projectPath);
         String attachmentContext = buildAttachmentPrompt(messages);
-        String systemContext = joinPromptContext(joinPromptContext(learningContext, attachmentContext), extensionContext);
+        // Capsule first (P0 region, §6.1): system guidance precedes learning/attachment context.
+        String capsule = host.taskCapsulePrompt();
+        String systemContext = joinPromptContext(
+                joinPromptContext(joinPromptContext(capsule, learningContext), attachmentContext),
+                extensionContext);
         String systemPrompt = systemPromptProvider.build(
                 promptHomePath,
                 aiSettings.getToneMode(),

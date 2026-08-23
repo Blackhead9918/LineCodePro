@@ -320,6 +320,57 @@ public final class LineCodeSchema {
                     + ")"
     };
 
+    /** LCP-Harness v1 tables (docs/lcp-harness-v1.md §35) — idempotent, see onOpen(). */
+    public static final String[] HARNESS_SQL = new String[] {
+            "CREATE TABLE IF NOT EXISTS agent_tasks ("
+                    + "id TEXT PRIMARY KEY, "
+                    + "conversation_id TEXT NOT NULL, "
+                    + "project_id TEXT, "
+                    + "parent_task_id TEXT, "
+                    + "mode TEXT NOT NULL DEFAULT 'AGENT', "
+                    + "goal TEXT NOT NULL, "
+                    + "scope TEXT, "
+                    + "constraints TEXT, "
+                    + "status TEXT NOT NULL DEFAULT 'CREATED', "
+                    + "risk_level TEXT DEFAULT 'LOW', "
+                    + "execution_profile TEXT DEFAULT 'LOCAL', "
+                    + "verification_policy TEXT DEFAULT 'LIGHT', "
+                    + "completion_condition TEXT, "
+                    + "failure_condition TEXT, "
+                    + "budget_json TEXT, "
+                    + "verdict TEXT, "
+                    + "attempt_count INTEGER DEFAULT 0, "
+                    + "max_attempts INTEGER DEFAULT 3, "
+                    + "created_at INTEGER NOT NULL, "
+                    + "updated_at INTEGER NOT NULL, "
+                    + "completed_at INTEGER)",
+            "CREATE INDEX IF NOT EXISTS idx_agent_tasks_conversation ON agent_tasks(conversation_id)",
+            "CREATE INDEX IF NOT EXISTS idx_agent_tasks_status ON agent_tasks(status)",
+            "CREATE INDEX IF NOT EXISTS idx_agent_tasks_parent ON agent_tasks(parent_task_id)",
+            "CREATE TABLE IF NOT EXISTS agent_evidence ("
+                    + "id TEXT PRIMARY KEY, "
+                    + "task_id TEXT NOT NULL, "
+                    + "type TEXT NOT NULL, "
+                    + "level INTEGER NOT NULL, "
+                    + "source TEXT NOT NULL, "
+                    + "claim TEXT, "
+                    + "summary TEXT, "
+                    + "ref_table TEXT, "
+                    + "ref_id TEXT, "
+                    + "strength REAL, "
+                    + "verified INTEGER DEFAULT 0, "
+                    + "created_at INTEGER NOT NULL)",
+            "CREATE INDEX IF NOT EXISTS idx_agent_evidence_task ON agent_evidence(task_id)",
+            "CREATE TABLE IF NOT EXISTS agent_events ("
+                    + "id TEXT PRIMARY KEY, "
+                    + "task_id TEXT NOT NULL, "
+                    + "event_type TEXT NOT NULL, "
+                    + "source TEXT, "
+                    + "payload TEXT, "
+                    + "created_at INTEGER NOT NULL)",
+            "CREATE INDEX IF NOT EXISTS idx_agent_events_task ON agent_events(task_id)"
+    };
+
     public static final String[] MIGRATIONS_SQL = new String[] {
             "CREATE TABLE IF NOT EXISTS schema_migrations ("
                     + "version INTEGER PRIMARY KEY,"
@@ -333,6 +384,9 @@ public final class LineCodeSchema {
     };
 
     public static final String[] DROP_SQL = new String[] {
+            "DROP TABLE IF EXISTS agent_events",
+            "DROP TABLE IF EXISTS agent_evidence",
+            "DROP TABLE IF EXISTS agent_tasks",
             "DROP TABLE IF EXISTS schema_migrations",
             "DROP TABLE IF EXISTS working_memory_fts",
             "DROP TABLE IF EXISTS conversation_index_fts",

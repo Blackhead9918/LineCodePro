@@ -128,6 +128,10 @@ public final class MainDependencies {
     public final ShareController shareController;
     public final QuoteController quoteController;
 
+    /** LCP-Harness v1: task persistence + lifecycle controller (§30, D01/D10). */
+    public final cn.lineai.model.harness.AgentTaskStore agentTaskStore;
+    public final cn.lineai.mvp.harness.TaskController taskController;
+
     public MainDependencies(Context context) {
         this.context = context.getApplicationContext();
         Context appContext = this.context;
@@ -148,6 +152,25 @@ public final class MainDependencies {
         promptTemplateRepository = new PromptTemplateRepository(resourceProvider, settingsRepository);
         LineTheme.apply(themeSettingsRepository.resolveCurrentPalette());
         conversationRepository = new ConversationRepository(database);
+        agentTaskStore = new cn.lineai.data.repository.AgentTaskRepository(database);
+        taskController = new cn.lineai.mvp.harness.TaskController(
+                agentTaskStore,
+                conversationId -> {
+                    // {conversationId}_t{n} — per-conversation counter (§45.16, M8)
+                    int max = 0;
+                    for (cn.lineai.model.harness.AgentTask existing
+                            : agentTaskStore.getAllForConversation(conversationId)) {
+                        String id = existing.id();
+                        int idx = id.lastIndexOf("_t");
+                        if (idx >= 0) {
+                            try {
+                                max = Math.max(max, Integer.parseInt(id.substring(idx + 2)));
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                    }
+                    return conversationId + "_t" + (max + 1);
+                });
         WorkspacePaths workspacePaths = new WorkspacePaths(context);
         projectRepository = new ProjectRepository(database, settingsRepository, workspacePaths);
         learningContextRepository = new LearningContextRepository(database, workspacePaths, promptTemplateRepository);
@@ -230,6 +253,18 @@ public final class MainDependencies {
         safPathResolver = new SafPathResolver();
         mainThreadDispatcher = new MainThreadDispatcher();
         backgroundTaskRunner = new BackgroundTaskRunner();
+        // Crash reconciliation (§45.8, D04): stale non-terminal tasks → INTERRUPTED, async.
+        final cn.lineai.model.harness.AgentTaskStore storeForReconcile = agentTaskStore;
+        backgroundTaskRunner.execute("harness-reconcile", () -> {
+            try {
+                int n = storeForReconcile.reconcileStaleTasks();
+                if (n > 0) {
+                    android.util.Log.i("MainDependencies", "Reconciled " + n + " stale harness task(s)");
+                }
+            } catch (RuntimeException e) {
+                android.util.Log.w("MainDependencies", "Harness reconciliation failed", e);
+            }
+        });
         lineCodeArchiveService = new LineCodeArchiveService(context);
         todoStateStore = new TodoStateStore();
         chatModeRepository.initialize();

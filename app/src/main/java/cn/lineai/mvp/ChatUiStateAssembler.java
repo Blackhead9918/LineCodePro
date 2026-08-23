@@ -47,6 +47,20 @@ public final class ChatUiStateAssembler {
             boolean streaming,
             List<ChatMessage> messages
     ) {
+        return assemble(projectLabel, projectSource, projectPath, conversationId, activeChatMode,
+                streaming, messages, "");
+    }
+
+    public ChatUiState assemble(
+            String projectLabel,
+            String projectSource,
+            String projectPath,
+            String conversationId,
+            String activeChatMode,
+            boolean streaming,
+            List<ChatMessage> messages,
+            String taskBannerLabel
+    ) {
         ModelConfig selectedModel = modelRepository.getSelectedModel();
         boolean hasConfiguredModel = selectedModel != null;
         ModelContextInfo contextInfo = ModelContextParser.parse(selectedModel);
@@ -80,7 +94,8 @@ public final class ChatUiStateAssembler {
                 conversationId,
                 messages,
                 selectedModelId,
-                availableModels
+                availableModels,
+                taskBannerLabel
         );
     }
 

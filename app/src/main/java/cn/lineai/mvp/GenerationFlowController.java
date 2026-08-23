@@ -66,6 +66,50 @@ final class GenerationFlowController {
         String formatRetryNotice(int attempt, int maxRetries, String error);
 
         String formatModelFailed(String error);
+
+        /** Shown when a model returns no content at all (i18n via host, not hardcoded). */
+        default String formatModelNoText() {
+            return "The model returned no text.";
+        }
+
+        /**
+         * Notice prepended when reasoning-only output is promoted to content
+         * (model never closed its {@code <think>} block or provider routed final
+         * tokens to reasoning_content). Empty default keeps behavior silent.
+         */
+        default String formatReasoningPromotedNotice() {
+            return "";
+        }
+    }
+
+    /**
+     * Pure decision for reasoning→content promotion. Package-private static so it can be
+     * unit-tested without constructing the controller.
+     *
+     * @param text    final content accumulated from the stream (may be empty)
+     * @param reasoning reasoning accumulated from the stream (may be empty)
+     * @param notice  i18n notice prepended to the promoted content (may be empty)
+     */
+    static Promotion promoteReasoningIfEmpty(String text, String reasoning, String notice) {
+        boolean textEmpty = text == null || text.trim().length() == 0;
+        boolean reasoningEmpty = reasoning == null || reasoning.trim().length() == 0;
+        if (!textEmpty || reasoningEmpty) {
+            return new Promotion(text == null ? "" : text,
+                    reasoning == null ? "" : reasoning);
+        }
+        String prefix = notice == null || notice.length() == 0 ? "" : notice + "\n\n";
+        return new Promotion(prefix + reasoning.trim(), "");
+    }
+
+    /** Immutable pair used by {@link #promoteReasoningIfEmpty}. */
+    static final class Promotion {
+        final String text;
+        final String reasoning;
+
+        Promotion(String text, String reasoning) {
+            this.text = text;
+            this.reasoning = reasoning;
+        }
     }
 
     private static final int MAX_RETRIES = 3;
@@ -636,8 +680,18 @@ final class GenerationFlowController {
                     : parsedResponseText.trim().length() == 0 ? message.getContent() : parsedResponseText;
             String finalReasoning = response.getReasoningContent().trim().length() == 0 ? message.getReasoningContent() : response.getReasoningContent();
             boolean hasToolCalls = !toolCalls.isEmpty();
+
+            // Fallback promotion (§ ThinkTagParser): some models emit their entire answer inside
+            // <think>…</think> without ever closing it, or the provider routes the final tokens
+            // to reasoning_content. An empty content bubble is never acceptable — promote the
+            // reasoning to content so the user gets an answer.
+            Promotion promoted = promoteReasoningIfEmpty(finalText, finalReasoning,
+                    host.formatReasoningPromotedNotice());
+            finalText = promoted.text;
+            finalReasoning = promoted.reasoning;
+
             if (finalText.trim().length() == 0 && finalReasoning.trim().length() == 0 && !hasToolCalls) {
-                finalText = "模型没有返回文本。";
+                finalText = host.formatModelNoText();
             }
             messages.set(index, message.withContent(finalText, finalReasoning, false)
                     .withToolCalls(toolCalls, false));

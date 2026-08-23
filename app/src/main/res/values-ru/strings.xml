@@ -1207,4 +1207,15 @@
     <string name="toolcall_preview_section_note">Тестовые данные — состояния не отражают реальные запуски инструментов.</string>
     <string name="settings_row_tutorial_title">Руководство</string>
     <string name="settings_row_tutorial_desc">От новичка до профи: модели, рабочее пространство, Termux, SSH и MCP</string>
+
+    <!-- Карточка задачи LCP-Harness -->
+    <string name="harness_task_active">Задача активна</string>
+    <string name="harness_task_status_format">%1$s \u00b7 попытка %2$d/%3$d</string>
+    <string name="harness_verdict_verified">Подтверждено</string>
+    <string name="harness_verdict_partially_verified">Частично подтверждено</string>
+    <string name="harness_verdict_unverified">Не подтверждено</string>
+    <string name="harness_verdict_failed">Ошибка</string>
+    <string name="harness_verdict_blocked">Заблокировано</string>
+    <string name="message_model_no_text">Модель не вернула текст.</string>
+    <string name="message_reasoning_promoted_notice">Модель дала ответ только внутри блока рассуждений; он перенесён в ответ.</string>
 </resources>

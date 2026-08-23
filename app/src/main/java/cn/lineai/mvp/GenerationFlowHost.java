@@ -83,4 +83,14 @@ class GenerationFlowHost implements GenerationFlowController.Host {
                 StringUtils.decodeUnicodeEscapes(error)
         );
     }
+
+    @Override
+    public String formatModelNoText() {
+        return coordinator.context().getString(R.string.message_model_no_text);
+    }
+
+    @Override
+    public String formatReasoningPromotedNotice() {
+        return coordinator.context().getString(R.string.message_reasoning_promoted_notice);
+    }
 }

@@ -12,5 +12,7 @@ dependencies {
     implementation(project(":core-security"))
     implementation(project(":data"))
     api(libs.json)
+    testImplementation(libs.junit)
+    testImplementation(libs.json)
     testImplementation(project(":feature-tool"))
 }

@@ -53,6 +53,7 @@ public final class LineCodeDatabase extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         executeAll(db, LineCodeSchema.CREATE_SQL);
+        executeAll(db, LineCodeSchema.HARNESS_SQL);
         executeAll(db, LineCodeSchema.MIGRATIONS_SQL);
         for (String sql : LineCodeSchema.OPTIONAL_FTS_SQL) {
             try {
@@ -76,6 +77,7 @@ public final class LineCodeDatabase extends SQLiteOpenHelper {
     public void onOpen(SQLiteDatabase db) {
         super.onOpen(db);
         executeAll(db, LineCodeSchema.CREATE_SQL);
+        executeAll(db, LineCodeSchema.HARNESS_SQL);
         for (String sql : LineCodeSchema.OPTIONAL_FTS_SQL) {
             try {
                 db.execSQL(sql);

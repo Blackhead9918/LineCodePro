@@ -120,6 +120,7 @@ public final class MainChatView extends FrameLayout implements MainContract.View
     private OverlayManager overlayManager;
     private final HeaderView headerView;
     private final LinearLayout contentView;
+    private final TextView taskBannerView;
     private final ChatMessageListView messageListView;
     private final ComposerView composerView;
     private final DrawerView drawerView;
@@ -183,6 +184,18 @@ public final class MainChatView extends FrameLayout implements MainContract.View
             }
         });
         contentView.addView(headerView, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+
+        // Active harness task banner (LCP-Harness v1) - hidden unless a task is active.
+        taskBannerView = LineTheme.text(context, "", LineTheme.FONT_XS, LineTheme.TEXT_SECONDARY, Typeface.NORMAL);
+        taskBannerView.setBackground(LineTheme.rounded(context, LineTheme.ACCENT_MUTED, 12));
+        int bannerHpad = LineTheme.LG;
+        int bannerVpad = LineTheme.SM;
+        taskBannerView.setPadding(bannerHpad, bannerVpad, bannerHpad, bannerVpad);
+        taskBannerView.setVisibility(GONE);
+        contentView.addView(taskBannerView, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
@@ -476,12 +489,23 @@ public final class MainChatView extends FrameLayout implements MainContract.View
     @Override
     public void render(ChatUiState state) {
         lastState = state;
+        renderTaskBanner(state);
         headerView.render(state);
         messageListView.render(state);
         composerView.render(state);
         if (drawerView.getVisibility() == VISIBLE) {
             renderDrawer(state);
         }
+    }
+
+    private void renderTaskBanner(ChatUiState state) {
+        String label = state == null ? "" : state.getTaskBannerLabel();
+        if (label == null || label.length() == 0) {
+            taskBannerView.setVisibility(GONE);
+            return;
+        }
+        taskBannerView.setText(label);
+        taskBannerView.setVisibility(VISIBLE);
     }
 
     @Override

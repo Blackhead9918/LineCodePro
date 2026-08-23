@@ -1210,4 +1210,15 @@
     <string name="toolcall_preview_section_note">以下为模拟数据，状态不代表真实工具运行结果。</string>
     <string name="settings_row_tutorial_title">查看教程</string>
     <string name="settings_row_tutorial_desc">从零到进阶：模型配置、工作区、Termux、SSH 与 MCP</string>
+
+    <!-- LCP-Harness 任务卡片 -->
+    <string name="harness_task_active">任务进行中</string>
+    <string name="harness_task_status_format">%1$s \u00b7 第 %2$d/%3$d 次尝试</string>
+    <string name="harness_verdict_verified">已验证</string>
+    <string name="harness_verdict_partially_verified">部分验证</string>
+    <string name="harness_verdict_unverified">未验证</string>
+    <string name="harness_verdict_failed">失败</string>
+    <string name="harness_verdict_blocked">已阻塞</string>
+    <string name="message_model_no_text">模型没有返回文本。</string>
+    <string name="message_reasoning_promoted_notice">模型仅在推理块中给出了回答，已将其提升为正式回复。</string>
 </resources>

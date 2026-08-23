@@ -431,6 +431,13 @@ final class MainControllerInitializer {
                     public String interruptedGenerationMessage() {
                         return context.getString(R.string.message_generation_interrupted);
                     }
+
+                    @Override
+                    public String taskCapsulePrompt() {
+                        cn.lineai.model.harness.TaskCapsule capsule =
+                                dependencies.taskController.getActiveCapsule();
+                        return capsule != null ? capsule.renderForSystemPrompt() : "";
+                    }
                 }
         );
         coordinator.directoryPickerController = new DirectoryPickerController(

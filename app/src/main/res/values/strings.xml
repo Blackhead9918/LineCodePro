@@ -1209,4 +1209,15 @@
     <string name="toolcall_preview_section_note">Sample data — states shown below may not reflect real tool runs.</string>
     <string name="settings_row_tutorial_title">Tutorial</string>
     <string name="settings_row_tutorial_desc">Beginner to advanced: models, workspace, Termux, SSH and MCP</string>
+
+    <!-- LCP-Harness task card -->
+    <string name="harness_task_active">Task active</string>
+    <string name="harness_task_status_format">%1$s \u00b7 attempt %2$d/%3$d</string>
+    <string name="harness_verdict_verified">Verified</string>
+    <string name="harness_verdict_partially_verified">Partially verified</string>
+    <string name="harness_verdict_unverified">Unverified</string>
+    <string name="harness_verdict_failed">Failed</string>
+    <string name="harness_verdict_blocked">Blocked</string>
+    <string name="message_model_no_text">The model returned no text.</string>
+    <string name="message_reasoning_promoted_notice">The model returned its answer inside the reasoning block only; it was promoted to the reply.</string>
 </resources>

@@ -1,6 +1,21 @@
 # 更新日志
 
-## v1.2.6 (未发布)
+## v1.2.6
+
+### Agent Harness (LCP-Harness v1)
+
+- **任务生命周期** - 新增 `cn.lineai.model.harness` / `cn.lineai.ai.harness` / `cn.lineai.mvp.harness` 三层包：`AgentTask` 状态机（PLANNING→EXECUTING→VERIFYING→终态，§45.2 转移表）、预算（generation attempt + tool call 计数）、恢复（最多 3 次，经 EXECUTING 重规划路径）、取消与恢复会话时的 `resumeActiveTask` 对账
+- **证据与判定** - `VerdictEngine` 按 E0–E4 证据等级输出 VERIFIED / PARTIALLY_VERIFIED / UNVERIFIED / FAILED / BLOCKED；`VerificationCapabilityMatrix` 按执行档位（LOCAL/SSH/IPC）诚实降级策略——LOCAL 永不发出完整 VERIFIED；`DiffScopeChecker` 提供设备端唯一的确定性 E2 检查（范围越界、批量删除、依赖变更标记）
+- **记忆学习闭环** - `FailurePatternTracker`（≥3 次独立失败 → FAILURE_PATTERN 候选）、`TaskLessonExtractor`（仅从已获证的 VERIFIED/PARTIALLY_VERIFIED 任务提取 WORKFLOW/PROJECT_FACT，Invariant 5：FAILED/UNVERIFIED 永不产出）、经现有 `MemoryExtractionService` 置信度门槛落库
+- **上下文管理** - `ContextPriority` P0–P8 九级（D03：capsule P0，用户请求 P1 受保护）、`FreshnessEvaluator` 缓存新鲜度三态、`ContextSelector` SELECT/PRUNE 预算分配（受保护项永不丢弃）；活动任务的 Task Capsule 注入 system prompt P0 区并跨压缩存活
+- **子代理与流水线** - `SubAgentBudgetLedger` 跨任务预算总账、`PipelineStageVerifier` 阶段间证据门、`AdaptiveResourceGovernor` 基于结果的限额自适应
+- **应用接入** - SQLite 新增 3 张 harness 表 + 5 索引（onCreate/onOpen 幂等执行，旧库自动升级）；启动时后台对账中断任务；聊天界面新增活动任务横幅；普通 CHAT 会话行为与此前完全一致（无任务时不注入任何内容）
+
+### 输出可靠性
+
+- **思考内容兜底提升** - 流式解析结束时若正文为空而推理区有内容（模型忘记闭合 `<think>` 或在思维链内直接作答），自动将推理内容提升为正文并附本地化提示；新增 `ReasoningPromotionTest`
+- ** runaway thinking 自动闭合** - `ThinkTagParser` 对超过 32K 字符仍未闭合的 `<think>` 块强制收口，后续内容按正常正文输出（安全网，不影响正常思维链）
+- **证据分类防虚增** - BUILD/TEST 证据分类现仅限可执行命令的工具（`shell_execute` / `git_*` / MCP），读取含 "gradle" 字样的文件不再伪造 E2/E3 证据抬高判定
 
 ### 内置 Git 工具
 

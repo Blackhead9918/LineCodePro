@@ -168,6 +168,7 @@ public final class MainCoordinator implements MainUiController {
         }
     };
     private final ProjectRuntimeState projectState = new ProjectRuntimeState();
+    private final MainDependencies dependencies;
     AttachmentPickerCoordinator attachmentPickerController;
 
     public MainCoordinator(Context context) {
@@ -176,6 +177,7 @@ public final class MainCoordinator implements MainUiController {
 
     public MainCoordinator(MainDependencies dependencies) {
         // === assignDependencies ===
+        this.dependencies = dependencies;
         this.context = dependencies.context;
         modelRepository = dependencies.modelRepository;
         aiBehaviorSettingsRepository = dependencies.aiBehaviorSettingsRepository;
@@ -1025,8 +1027,35 @@ public final class MainCoordinator implements MainUiController {
                 chatSessionStore.getCurrentConversationId(),
                 activeChatMode,
                 chatSessionStore.isStreaming(),
-                messages
+                messages,
+                buildTaskBannerLabel()
         ));
+    }
+
+    /** Active harness task banner text (LCP-Harness v1); empty when no task is active. */
+    private String buildTaskBannerLabel() {
+        try {
+            cn.lineai.mvp.harness.TaskController taskController = dependencies.taskController;
+            if (taskController == null || !taskController.hasActiveTask()) {
+                return "";
+            }
+            cn.lineai.model.harness.AgentTask task = taskController.getActiveTask();
+            if (task == null) {
+                return "";
+            }
+            String goal = task.goal() == null ? "" : task.goal();
+            if (goal.length() > 80) {
+                goal = goal.substring(0, 80) + "…";
+            }
+            String title = context.getString(R.string.harness_task_active);
+            String status = context.getString(R.string.harness_task_status_format,
+                    task.status().name(),
+                    Math.max(1, task.attemptCount()),
+                    Math.max(task.attemptCount(), task.maxAttempts()));
+            return title + ": " + goal + " · " + status;
+        } catch (RuntimeException e) {
+            return "";
+        }
     }
 
     void resetTodoState() {

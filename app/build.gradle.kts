@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
-val releaseVersionName = "1.2.5"
+val releaseVersionName = "1.2.6"
 val releaseApkName = "LineCode Pro $releaseVersionName.APK"
 val releaseIdsigName = "$releaseApkName.idsig"
 val releaseSigningProperties = Properties()
@@ -99,11 +99,18 @@ android {
         }
     }
 
+    testOptions {
+        unitTests {
+            // Harness controllers log via android.util.Log; JVM tests get no-op defaults.
+            isReturnDefaultValues = true
+        }
+    }
+
     defaultConfig {
         applicationId = "cn.lineai"
         minSdk = 26
         targetSdk = 37
-        versionCode = 28
+        versionCode = 29
         versionName = releaseVersionName
     }
 

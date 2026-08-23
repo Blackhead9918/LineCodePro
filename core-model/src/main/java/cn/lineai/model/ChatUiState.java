@@ -22,6 +22,7 @@ public final class ChatUiState {
     private final String conversationId;
     private final List<ChatMessage> messages;
     private final List<ModelConfig> availableModels;
+    private final String taskBannerLabel;
 
     public ChatUiState(
             String projectLabel, String projectPath, String modelLabel, String contextLabel,
@@ -96,6 +97,21 @@ public final class ChatUiState {
             String chatMode, String conversationId, List<ChatMessage> messages,
             String selectedModelId, List<ModelConfig> availableModels
     ) {
+        this(projectLabel, projectPath, modelLabel, contextLabel, contextPercent, streaming,
+                hasConfiguredModel, thinkingScrollEnabled, thinkingAutoExpandEnabled, codeWrapEnabled,
+                browserMode, enterKeyBehavior, chatMode, conversationId, messages,
+                selectedModelId, availableModels, "");
+    }
+
+    public ChatUiState(
+            String projectLabel, String projectPath, String modelLabel, String contextLabel,
+            int contextPercent, boolean streaming, boolean hasConfiguredModel,
+            boolean thinkingScrollEnabled, boolean thinkingAutoExpandEnabled,
+            boolean codeWrapEnabled, String browserMode, String enterKeyBehavior,
+            String chatMode, String conversationId, List<ChatMessage> messages,
+            String selectedModelId, List<ModelConfig> availableModels,
+            String taskBannerLabel
+    ) {
         this.projectLabel = projectLabel;
         this.projectPath = projectPath == null ? "" : projectPath;
         this.modelLabel = modelLabel;
@@ -117,6 +133,7 @@ public final class ChatUiState {
         this.availableModels = availableModels == null
                 ? Collections.emptyList()
                 : Collections.unmodifiableList(new ArrayList<>(availableModels));
+        this.taskBannerLabel = taskBannerLabel == null ? "" : taskBannerLabel;
     }
 
     public String getProjectLabel() { return projectLabel; }
@@ -136,4 +153,7 @@ public final class ChatUiState {
     public String getChatMode() { return chatMode; }
     public String getConversationId() { return conversationId; }
     public List<ChatMessage> getMessages() { return messages; }
+
+    /** Human-readable active-task banner text; empty when no harness task is active. */
+    public String getTaskBannerLabel() { return taskBannerLabel; }
 }
