@@ -10,6 +10,7 @@ import cn.lineai.ai.message.UserModelMessage;
 import cn.lineai.ai.prompt.SystemPromptProvider;
 import cn.lineai.ai.protocol.ModelProtocolFactory;
 import cn.lineai.context.ContextManager;
+import cn.lineai.context.ObservationPruner;
 import cn.lineai.data.repository.AiBehaviorSettingsRepository;
 import cn.lineai.data.repository.ChatModeRepository;
 import cn.lineai.data.repository.ExtensionStore;
@@ -149,7 +150,8 @@ final class ModelPromptController {
         int reservedTokens = contextManager.estimateTokens(systemPrompt) + 2048;
         boolean includeReasoning = aiSettings.isPreserveReasoningEnabled();
         List<ChatMessage> contextWindow = contextManager.selectWindow(messages, contextTokens, reservedTokens, includeReasoning);
-        for (ChatMessage message : completeToolCallPairsForRequest(contextWindow, host.interruptedGenerationMessage())) {
+        List<ChatMessage> prunedWindow = ObservationPruner.pruneHistoricalObservations(contextWindow);
+        for (ChatMessage message : completeToolCallPairsForRequest(prunedWindow, host.interruptedGenerationMessage())) {
             modelMessages.add(toModelMessage(message, includeReasoning));
         }
         return modelMessages;

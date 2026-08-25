@@ -10,6 +10,7 @@
     <string name="tool_file_read_range_info">\n\n… (共 %1$d 行，显示 KB %2$d-%3$d / 共 %4$dKB)</string>
     <string name="tool_file_read_failed">读取文件失败: %1$s</string>
     <string name="tool_file_read_dir_truncated">… (目录项过多，已截断)\n</string>
+    <string name="tool_file_read_binary_file">[二进制文件无法以文本形式显示: %1$s (%2$d 字节)]</string>
 
     <!-- FileEditTool -->
     <string name="tool_file_edit_old_string_empty">old_string 不能为空</string>
@@ -19,6 +20,12 @@
     <string name="tool_file_edit_multiple_matches">old_string 匹配到 %1$d 处。请提供更唯一的 old_string，或设置 replace_all=true 以替换全部匹配。</string>
     <string name="tool_file_edit_success">成功编辑文件 %1$s (%2$d 处匹配已替换)</string>
     <string name="tool_file_edit_failed">编辑文件失败: %1$s</string>
+
+    <!-- FileMultiEditTool -->
+    <string name="tool_file_multi_edit_no_edits">必须提供至少一个编辑块</string>
+    <string name="tool_file_multi_edit_chunk_failed">第 %1$d 个编辑块失败: %2$s</string>
+    <string name="tool_file_multi_edit_success">已成功应用 %1$d 处不重叠的编辑到 %2$s</string>
+    <string name="tool_call_action_multi_edit">批量编辑</string>
 
     <!-- FileWriteTool -->
     <string name="tool_file_write_is_directory">路径是一个目录，无法写入文件: %1$s\n如需创建文件，请指定完整文件路径。</string>
@@ -182,6 +189,7 @@
 
     <!-- Tool action labels (used by BaseTool.getActionName) -->
     <string name="tool_call_action_read">读取</string>
+    <string name="tool_call_action_outline">大纲</string>
     <string name="tool_call_action_search">搜索</string>
     <string name="tool_call_action_fetch">抓取</string>
     <string name="tool_call_action_match">匹配</string>

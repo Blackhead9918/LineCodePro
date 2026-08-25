@@ -93,16 +93,12 @@ val validateReleaseSigning by tasks.registering {
 
 android {
     namespace = "cn.lineai"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "cn.lineai"
         minSdk = 26
-        targetSdk = 37
+        targetSdk = 36
         versionCode = 28
         versionName = releaseVersionName
     }

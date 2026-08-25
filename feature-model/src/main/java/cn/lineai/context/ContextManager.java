@@ -53,7 +53,8 @@ public final class ContextManager {
         if (messages == null) {
             return total;
         }
-        for (ChatMessage message : messages) {
+        List<ChatMessage> prepared = ObservationPruner.pruneHistoricalObservations(messages);
+        for (ChatMessage message : prepared) {
             total += estimateTokens(message, includeReasoning);
         }
         return total;
@@ -67,13 +68,14 @@ public final class ContextManager {
         if (messages == null || messages.isEmpty()) {
             return Collections.emptyList();
         }
+        List<ChatMessage> prepared = ObservationPruner.pruneHistoricalObservations(messages);
         int safeContext = Math.max(MIN_CONTEXT_TOKENS, contextTokens);
         int budget = Math.max(512, safeContext - Math.max(DEFAULT_RESERVE_TOKENS, reservedTokens));
         ArrayList<ChatMessage> selected = new ArrayList<>();
         int used = 0;
 
-        for (int i = messages.size() - 1; i >= 0; i--) {
-            MessageGroup group = groupEndingAt(messages, i, includeReasoning);
+        for (int i = prepared.size() - 1; i >= 0; i--) {
+            MessageGroup group = groupEndingAt(prepared, i, includeReasoning);
             if (group.isEmpty()) {
                 continue;
             }

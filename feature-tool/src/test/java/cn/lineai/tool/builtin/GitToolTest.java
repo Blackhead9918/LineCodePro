@@ -34,7 +34,7 @@ public final class GitToolTest {
     }
 
     @Test
-    public void diffWithStagedAndStatAddsFlags() {
+    public void diffWithStagedAndStatAddsFlags() throws Exception {
         Assert.assertEquals(
                 "git diff --no-ext-diff --no-color --cached --stat",
                 GitTool.buildCommand(GitTool.NAME_DIFF, new JSONObject()
@@ -44,7 +44,7 @@ public final class GitToolTest {
     }
 
     @Test
-    public void diffWithPathQuotesPath() {
+    public void diffWithPathQuotesPath() throws Exception {
         Assert.assertEquals(
                 "git diff --no-ext-diff --no-color -- 'src/Main.java'",
                 GitTool.buildCommand(GitTool.NAME_DIFF, new JSONObject()
@@ -61,7 +61,7 @@ public final class GitToolTest {
     }
 
     @Test
-    public void logWithLimitAddsMaxCount() {
+    public void logWithLimitAddsMaxCount() throws Exception {
         Assert.assertEquals(
                 "git log --oneline --no-color --max-count=10",
                 GitTool.buildCommand(GitTool.NAME_LOG, new JSONObject()
@@ -70,7 +70,7 @@ public final class GitToolTest {
     }
 
     @Test
-    public void logWithPathQuotesPath() {
+    public void logWithPathQuotesPath() throws Exception {
         Assert.assertEquals(
                 "git log --oneline --no-color --max-count=5 -- 'src/Main.java'",
                 GitTool.buildCommand(GitTool.NAME_LOG, new JSONObject()
@@ -80,7 +80,7 @@ public final class GitToolTest {
     }
 
     @Test
-    public void commitStagesAllChangesWhenNoPaths() {
+    public void commitStagesAllChangesWhenNoPaths() throws Exception {
         Assert.assertEquals(
                 "git add -A && git commit -m 'Fix the bug'",
                 GitTool.buildCommand(GitTool.NAME_COMMIT, new JSONObject()
@@ -89,7 +89,7 @@ public final class GitToolTest {
     }
 
     @Test
-    public void commitWithPathsStagesOnlyThosePaths() {
+    public void commitWithPathsStagesOnlyThosePaths() throws Exception {
         Assert.assertEquals(
                 "git add 'a.txt' 'b/c.txt' && git commit -m 'Update docs'",
                 GitTool.buildCommand(GitTool.NAME_COMMIT, new JSONObject()
@@ -99,7 +99,7 @@ public final class GitToolTest {
     }
 
     @Test
-    public void commitWithAllowEmptyAddsFlag() {
+    public void commitWithAllowEmptyAddsFlag() throws Exception {
         Assert.assertEquals(
                 "git add -A && git commit --allow-empty -m 'Empty'",
                 GitTool.buildCommand(GitTool.NAME_COMMIT, new JSONObject()
@@ -109,7 +109,7 @@ public final class GitToolTest {
     }
 
     @Test
-    public void commitMessageQuotesSingleQuotes() {
+    public void commitMessageQuotesSingleQuotes() throws Exception {
         Assert.assertEquals(
                 "git add -A && git commit -m 'It'\\''s done'",
                 GitTool.buildCommand(GitTool.NAME_COMMIT, new JSONObject()
@@ -131,7 +131,7 @@ public final class GitToolTest {
     }
 
     @Test
-    public void pushWithRemoteAndBranch() {
+    public void pushWithRemoteAndBranch() throws Exception {
         Assert.assertEquals(
                 "git push 'upstream' 'feature/x'",
                 GitTool.buildCommand(GitTool.NAME_PUSH, new JSONObject()

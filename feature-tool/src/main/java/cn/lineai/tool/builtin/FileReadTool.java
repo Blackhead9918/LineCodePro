@@ -89,6 +89,12 @@ public final class FileReadTool extends BaseTool {
             boolean hasKbRange = input.has("start_kb") || input.has("end_kb");
 
             long fileLen = file.length();
+            String displayRelativePath = FileToolPathPolicy.displayPath(context.getHomePath(), file);
+
+            // Fast binary check
+            if (isBinaryFile(file)) {
+                return ok(context.getString(R.string.tool_file_read_binary_file, displayRelativePath, fileLen));
+            }
 
             // No KB range specified:
             //  - small file (< 50KB): read entirely
@@ -96,13 +102,25 @@ public final class FileReadTool extends BaseTool {
             if (!hasKbRange) {
                 if (fileLen > LARGE_FILE_THRESHOLD_BYTES) {
                     return error(context.getString(R.string.tool_file_read_exceed_50kb,
-                            FileToolPathPolicy.displayPath(context.getHomePath(), file),
+                            displayRelativePath,
                             fileLen / 1024,
                             input.optString("file_path")));
                 }
                 String content = FileIo.readUtf8(file);
+                String[] lines = content.split("\n", -1);
+                int totalLines = lines.length;
                 String numbered = addLineNumbers(content, 1);
-                return ok(ToolResult.truncateContent(numbered));
+                
+                StringBuilder sb = new StringBuilder();
+                sb.append("[FILE: ").append(displayRelativePath)
+                  .append(" (Lines 1-").append(totalLines)
+                  .append(" of ").append(totalLines).append(")]\n");
+                sb.append(numbered);
+                if (!numbered.endsWith("\n")) {
+                    sb.append('\n');
+                }
+                sb.append("[EOF: ").append(displayRelativePath).append("]");
+                return ok(ToolResult.truncateContent(sb.toString()));
             }
 
             // KB range specified: read ONLY the requested byte range. This caps the
@@ -148,10 +166,11 @@ public final class FileReadTool extends BaseTool {
             }
 
             String extracted = content.substring(startChar, endChar);
-            StringBuilder result = new StringBuilder();
-            result.append(addLineNumbers(extracted, (int) startLineNumber));
+            String[] extractedLines = extracted.split("\n", -1);
+            int lineCount = extractedLines.length;
+            long endLineNumber = startLineNumber + Math.max(0, lineCount - 1);
 
-            // Add range info
+            // Count total lines in file
             long totalLines = 1;
             try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
                 long pos = 0;
@@ -163,12 +182,45 @@ public final class FileReadTool extends BaseTool {
                     pos++;
                 }
             }
-            result.append(context.getString(R.string.tool_file_read_range_info, totalLines, startKb, endKb, fileLen / 1024));
+
+            StringBuilder result = new StringBuilder();
+            result.append("[FILE: ").append(displayRelativePath)
+                  .append(" (Lines ").append(startLineNumber).append("-").append(endLineNumber)
+                  .append(" of ").append(totalLines).append(")]\n");
+            result.append(addLineNumbers(extracted, (int) startLineNumber));
+            if (!result.toString().endsWith("\n")) {
+                result.append('\n');
+            }
+            if (endByte >= fileLen) {
+                result.append("[EOF: ").append(displayRelativePath).append("]");
+            } else {
+                result.append("[CONTINUED: ").append(displayRelativePath)
+                      .append(" (use start_kb=").append(endKb).append(" to read next segment)]");
+            }
 
             return ok(ToolResult.truncateContent(result.toString()));
         } catch (Exception e) {
             return error(context.getString(R.string.tool_file_read_failed, e.getMessage()));
         }
+    }
+
+    /** 检测文件是否为二进制文件（检查前 4096 字节中是否包含 null 字节）。 */
+    private static boolean isBinaryFile(File file) {
+        if (!file.isFile() || file.length() == 0) {
+            return false;
+        }
+        int checkLen = (int) Math.min(4096L, file.length());
+        byte[] buf = new byte[checkLen];
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            int read = raf.read(buf, 0, checkLen);
+            for (int i = 0; i < read; i++) {
+                if (buf[i] == 0) {
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return false;
     }
 
     /** 只读取文件的 [start, end) 字节区间，避免一次性加载整个文件。 */

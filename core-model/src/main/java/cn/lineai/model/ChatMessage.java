@@ -332,6 +332,12 @@ public final class ChatMessage {
                 diffId, reviewState, reviewMessage, compactStatus, responseInputItemJson, attachments, modelSwitchNotification);
     }
 
+    public ChatMessage withContent(String nextContent) {
+        return new ChatMessage(id, role, nextContent, reasoningContent, streaming, hidden,
+                excludeFromContext, toolCalls, toolResults, toolCallId, toolName, error,
+                diffId, reviewState, reviewMessage, compactStatus, responseInputItemJson, attachments, modelSwitchNotification);
+    }
+
     public ChatMessage withCompactStatus(String nextCompactStatus, boolean nextStreaming) {
         return new ChatMessage(id, role, content, reasoningContent, nextStreaming, hidden,
                 excludeFromContext, toolCalls, toolResults, toolCallId, toolName, error,

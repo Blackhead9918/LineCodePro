@@ -10,6 +10,7 @@
     <string name="tool_file_read_range_info">\n\n… (всего %1$d строк, отображаются КБ %2$d-%3$d / всего %4$d КБ)</string>
     <string name="tool_file_read_failed">Не удалось прочитать файл: %1$s</string>
     <string name="tool_file_read_dir_truncated">… (слишком много элементов каталога, усечено)\n</string>
+    <string name="tool_file_read_binary_file">[Двоичный файл не может быть отображен как текст: %1$s (%2$d байт)]</string>
 
     <!-- FileEditTool -->
     <string name="tool_file_edit_old_string_empty">old_string не может быть пустым</string>
@@ -19,6 +20,12 @@
     <string name="tool_file_edit_multiple_matches">old_string совпал %1$d раз. Укажите более уникальный old_string или задайте replace_all=true для замены всех вхождений.</string>
     <string name="tool_file_edit_success">Успешно отредактирован %1$s (%2$d совпадений заменено)</string>
     <string name="tool_file_edit_failed">Не удалось отредактировать файл: %1$s</string>
+
+    <!-- FileMultiEditTool -->
+    <string name="tool_file_multi_edit_no_edits">Требуется хотя бы один блок изменений</string>
+    <string name="tool_file_multi_edit_chunk_failed">Блок изменений %1$d завершился с ошибкой: %2$s</string>
+    <string name="tool_file_multi_edit_success">Успешно применены %1$d непересекающихся изменений к %2$s</string>
+    <string name="tool_call_action_multi_edit">Пакетное редактирование</string>
 
     <!-- FileWriteTool -->
     <string name="tool_file_write_is_directory">Путь является каталогом, нельзя записать файл: %1$s\nДля создания файла укажите полный путь к файлу.</string>
@@ -182,6 +189,7 @@
 
     <!-- Tool action labels (used by BaseTool.getActionName) -->
     <string name="tool_call_action_read">Чтение</string>
+    <string name="tool_call_action_outline">Структура</string>
     <string name="tool_call_action_search">Поиск</string>
     <string name="tool_call_action_fetch">Загрузить</string>
     <string name="tool_call_action_match">Совпадение</string>

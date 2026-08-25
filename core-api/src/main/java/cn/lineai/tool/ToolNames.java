@@ -8,8 +8,10 @@ public final class ToolNames {
     private ToolNames() {}
 
     public static final String FILE_READ = "file_read";
+    public static final String FILE_OUTLINE = "file_outline";
     public static final String FILE_WRITE = "file_write";
     public static final String FILE_EDIT = "file_edit";
+    public static final String FILE_MULTI_EDIT = "file_multi_edit";
     public static final String FILE_DELETE = "file_delete";
     public static final String LIST_DIR = "list_dir";
     public static final String GLOB = "glob";

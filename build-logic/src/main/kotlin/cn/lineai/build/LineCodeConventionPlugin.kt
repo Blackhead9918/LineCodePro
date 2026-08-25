@@ -3,49 +3,33 @@ package cn.lineai.build
 import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.JavaVersion
-import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.kotlin.dsl.configure
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.getByType
 
 class LineCodeConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            pluginManager.apply("com.android.library")
+            plugins.apply("com.android.library")
 
-            extensions.configure<LibraryExtension> {
-                compileSdk = 36
-
-                defaultConfig {
+            extensions.findByType(LibraryExtension::class.java)?.let { ext ->
+                ext.compileSdk = 36
+                ext.defaultConfig {
                     minSdk = 26
-                }
-
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_11
-                    targetCompatibility = JavaVersion.VERSION_11
-                }
-
-                lint {
-                    abortOnError = true
-                    xmlReport = true
-                    htmlReport = true
+                    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 }
             }
+
+            extensions.findByType(JavaPluginExtension::class.java)?.let { ext ->
+                ext.sourceCompatibility = org.gradle.api.JavaVersion.VERSION_17
+                ext.targetCompatibility = org.gradle.api.JavaVersion.VERSION_17
+            }
+
+            dependencies.add("testImplementation", "junit:junit:4.13.2")
 
             configurations.matching {
-                it.name.endsWith("RuntimeClasspath")
+                it.name == "debugRuntimeClasspath" || it.name == "releaseRuntimeClasspath"
             }.configureEach {
-                exclude(mapOf("group" to "org.jetbrains.kotlin", "module" to "kotlin-stdlib"))
-                exclude(mapOf("group" to "org.jetbrains.kotlin", "module" to "kotlin-stdlib-common"))
-                exclude(mapOf("group" to "org.jetbrains.kotlin", "module" to "kotlin-stdlib-jdk7"))
-                exclude(mapOf("group" to "org.jetbrains.kotlin", "module" to "kotlin-stdlib-jdk8"))
-                exclude(mapOf("group" to "org.jetbrains", "module" to "annotations"))
-            }
-
-            val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
-            dependencies {
-                add("testImplementation", libs.findLibrary("junit").get())
+                exclude(mapOf("group" to "com.google.guava", "module" to "listenablefuture"))
             }
         }
     }

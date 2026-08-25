@@ -78,6 +78,32 @@ public final class ContextManagerTest {
         assertEquals(4, selected.size());
     }
 
+    @Test
+    public void selectWindowIntegratesObservationPruningForHistoricalTurns() {
+        ArrayList<ChatMessage> messages = new ArrayList<>();
+        // Turn 1
+        messages.add(new ChatMessage("u1", ChatMessage.Role.USER, "Read big file", false));
+        StringBuilder bulkyFile = new StringBuilder();
+        for (int i = 1; i <= 300; i++) {
+            bulkyFile.append("Line ").append(i).append(": public void testMethod").append(i).append("() {}\n");
+        }
+        messages.add(ChatMessage.toolResult("t1", bulkyFile.toString(), "call_1", "file_read", false));
+        messages.add(new ChatMessage("a1", ChatMessage.Role.ASSISTANT, "Analysis completed.", false));
+
+        // Turn 2 (active turn)
+        messages.add(new ChatMessage("u2", ChatMessage.Role.USER, "Next task please", false));
+
+        List<ChatMessage> selected = new ContextManager().selectWindow(messages, 4096, 3500);
+
+        // Because t1 was pruned in the historical turn, all messages fit comfortably in window
+        assertEquals(4, selected.size());
+        assertEquals("u1", selected.get(0).getId());
+        assertEquals("t1", selected.get(1).getId());
+        assertTrue(selected.get(1).getContent().contains("[Observation pruned"));
+        assertTrue(selected.get(1).getContent().length() < 200);
+        assertEquals("u2", selected.get(3).getId());
+    }
+
     private static String repeat(String value, int count) {
         StringBuilder builder = new StringBuilder(value.length() * count);
         for (int i = 0; i < count; i++) {

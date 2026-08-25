@@ -10,6 +10,8 @@ import cn.lineai.tool.builtin.AgentPipelineTool;
 import cn.lineai.tool.builtin.AgentTool;
 import cn.lineai.tool.builtin.FileDeleteTool;
 import cn.lineai.tool.builtin.FileEditTool;
+import cn.lineai.tool.builtin.FileMultiEditTool;
+import cn.lineai.tool.builtin.FileOutlineTool;
 import cn.lineai.tool.builtin.GitTool;
 import cn.lineai.tool.builtin.FileReadTool;
 import cn.lineai.tool.builtin.FileWriteTool;
@@ -44,8 +46,10 @@ public final class BuiltInToolProviders {
         List<BuiltInToolProvider> list = new ArrayList<>();
         // Stateless tools with no Android dependencies.
         list.add((context, ipc) -> new FileReadTool());
+        list.add((context, ipc) -> new FileOutlineTool());
         list.add((context, ipc) -> new FileWriteTool());
         list.add((context, ipc) -> new FileEditTool());
+        list.add((context, ipc) -> new FileMultiEditTool());
         list.add((context, ipc) -> new FileDeleteTool());
         list.add((context, ipc) -> new GlobTool());
         list.add((context, ipc) -> new ListDirectoryTool());
