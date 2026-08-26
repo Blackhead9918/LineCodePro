@@ -889,6 +889,7 @@ public final class MainChatView extends FrameLayout implements MainContract.View
      * 读取图片并按需压缩：长边超过 1568 时缩放至 1568；压缩后总字节超过 3.5MB 时进一步降低质量。
      * 这是 OpenAI / Anthropic 视觉模型对单图大小的常见上限的折中。
      */
+    @android.annotation.SuppressLint("WrongThread")
     private byte[] readAndCompressImage(android.content.ContentResolver resolver, Uri uri) throws Exception {
         android.graphics.Bitmap bitmap = null;
         java.io.InputStream input = resolver.openInputStream(uri);
