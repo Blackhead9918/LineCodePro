@@ -5,6 +5,8 @@ import org.gradle.api.Project
 
 class LineCodeFeatureConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        target.plugins.apply("linecode.convention")
+        with(target) {
+            pluginManager.apply("linecode.convention")
+        }
     }
 }
