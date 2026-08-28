@@ -179,17 +179,27 @@ final class ToolConfirmationController {
     }
 
     boolean isSessionAutoConfirmed(ToolCall call) {
-        if (call == null) {
+        if (call == null || call.getName() == null || call.getName().length() == 0) {
             return false;
         }
         synchronized (sessionAutoConfirmedTools) {
             syncSessionAutoToolConfirmationsLocked();
-            return sessionAutoConfirmedTools.contains(call.getName());
+            if (sessionAutoConfirmedTools.contains(call.getName())) {
+                return true;
+            }
+            if (sessionAutoConfirmedTools.contains(SHELL_EXECUTE_TOOL) && isGitTool(call.getName())) {
+                return true;
+            }
+            return false;
         }
     }
 
+    private static boolean isGitTool(String toolName) {
+        return toolName != null && toolName.startsWith("git_");
+    }
+
     void rememberSessionAutoConfirmation(ToolCall call) {
-        if (call == null || !SHELL_EXECUTE_TOOL.equals(call.getName())) {
+        if (call == null || call.getName() == null || call.getName().length() == 0) {
             return;
         }
         synchronized (sessionAutoConfirmedTools) {
@@ -254,7 +264,8 @@ final class ToolConfirmationController {
     private boolean isSessionAutoReview(String state, ToolCall call) {
         return TOOL_REVIEW_SESSION_AUTO.equals(state)
                 && call != null
-                && SHELL_EXECUTE_TOOL.equals(call.getName());
+                && call.getName() != null
+                && call.getName().length() > 0;
     }
 
     private void syncSessionAutoToolConfirmationsLocked() {
@@ -289,7 +300,7 @@ final class ToolConfirmationController {
         if (reason.length() == 0) {
             return "用户拒绝执行此工具。";
         }
-        return "用户拒绝删除：" + reason;
+        return "用户拒绝：" + reason;
     }
 
     static final class PendingAgentToolReview {
