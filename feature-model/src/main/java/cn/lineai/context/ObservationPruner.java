@@ -17,13 +17,15 @@ import java.util.List;
 public final class ObservationPruner {
     private static final int PRUNE_THRESHOLD_CHARS = 250;
     private static final int PRUNE_THRESHOLD_LINES = 8;
+    private static final int ACTIVE_WAVE_KEEP_RECENT_TOOLS = 4;
 
     private ObservationPruner() {
     }
 
     /**
-     * Identifies tool messages in previous turns and condenses their observations
-     * if they exceed the size threshold. The most recent turn's tool messages remain full.
+     * Identifies tool messages in previous turns as well as older intermediate tool
+     * executions within a long multi-step active wave, and condenses bulky observations.
+     * The most recent active tool executions remain full.
      */
     public static List<ChatMessage> pruneHistoricalObservations(List<ChatMessage> messages) {
         if (messages == null || messages.isEmpty()) {
@@ -40,6 +42,18 @@ public final class ObservationPruner {
             }
         }
 
+        // Count how many tool messages exist in the active wave (after lastUserIndex)
+        int activeToolCount = 0;
+        if (lastUserIndex != -1) {
+            for (int i = lastUserIndex + 1; i < messages.size(); i++) {
+                ChatMessage msg = messages.get(i);
+                if (msg != null && msg.getRole() == ChatMessage.Role.TOOL) {
+                    activeToolCount++;
+                }
+            }
+        }
+
+        int seenActiveTools = 0;
         ArrayList<ChatMessage> result = new ArrayList<>(messages.size());
         for (int i = 0; i < messages.size(); i++) {
             ChatMessage msg = messages.get(i);
@@ -47,9 +61,19 @@ public final class ObservationPruner {
                 continue;
             }
 
-            // Only tool messages that occur before the latest user message are historical
             boolean isHistorical = (lastUserIndex != -1 && i < lastUserIndex);
-            if (msg.getRole() == ChatMessage.Role.TOOL && isHistorical) {
+            boolean isOlderActiveTool = false;
+            if (!isHistorical && msg.getRole() == ChatMessage.Role.TOOL && lastUserIndex != -1 && i > lastUserIndex) {
+                seenActiveTools++;
+                // If there are many tool steps in this active turn, prune older intermediate tool steps
+                // that have already been evaluated and processed by the model.
+                if (activeToolCount > ACTIVE_WAVE_KEEP_RECENT_TOOLS 
+                        && seenActiveTools <= (activeToolCount - ACTIVE_WAVE_KEEP_RECENT_TOOLS)) {
+                    isOlderActiveTool = true;
+                }
+            }
+
+            if (msg.getRole() == ChatMessage.Role.TOOL && (isHistorical || isOlderActiveTool)) {
                 String pruned = pruneToolOutput(msg);
                 if (!pruned.equals(msg.getContent())) {
                     result.add(msg.withContent(pruned));

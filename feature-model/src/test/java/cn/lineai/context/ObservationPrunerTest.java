@@ -102,4 +102,33 @@ public final class ObservationPrunerTest {
         assertTrue(rawSingleToolTokens > 1500);
         assertTrue(totalPrunedTokens < rawSingleToolTokens);
     }
+
+    @Test
+    public void prunesOldObservationsInLongActiveWave() {
+        ArrayList<ChatMessage> messages = new ArrayList<>();
+        messages.add(new ChatMessage("u1", ChatMessage.Role.USER, "Start complex task", false));
+
+        StringBuilder longContent = new StringBuilder();
+        for (int i = 1; i <= 30; i++) {
+            longContent.append("Line ").append(i).append(": some intermediate content\n");
+        }
+
+        // Add 6 sequential tool calls in the same active wave
+        for (int i = 1; i <= 6; i++) {
+            messages.add(ChatMessage.toolResult("t" + i, longContent.toString(), "call_" + i, ToolNames.SHELL_EXECUTE, false));
+        }
+
+        List<ChatMessage> pruned = ObservationPruner.pruneHistoricalObservations(messages);
+        assertEquals(7, pruned.size());
+
+        // First 2 active tools (older than the last 4) should be pruned
+        assertTrue(pruned.get(1).getContent().contains("[Output pruned"));
+        assertTrue(pruned.get(2).getContent().contains("[Output pruned"));
+
+        // Last 4 active tools should remain full
+        assertEquals(longContent.toString(), pruned.get(3).getContent());
+        assertEquals(longContent.toString(), pruned.get(4).getContent());
+        assertEquals(longContent.toString(), pruned.get(5).getContent());
+        assertEquals(longContent.toString(), pruned.get(6).getContent());
+    }
 }

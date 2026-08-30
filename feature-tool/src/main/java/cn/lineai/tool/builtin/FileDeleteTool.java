@@ -1,4 +1,5 @@
 package cn.lineai.tool.builtin;
+import cn.lineai.data.repository.GroundedStateManager;
 import cn.lineai.model.tool.ToolResult;
 
 import cn.lineai.tool.BaseTool;
@@ -73,6 +74,7 @@ public final class FileDeleteTool extends BaseTool {
                     continue;
                 }
                 deleteRecursive(target);
+                GroundedStateManager.getInstance().remove(target.getAbsolutePath());
                 deleted.add(FileToolPathPolicy.displayPath(context.getHomePath(), target));
             } catch (Exception e) {
                 errors.add(context.getString(R.string.tool_file_delete_item_failed, path, e.getMessage()));

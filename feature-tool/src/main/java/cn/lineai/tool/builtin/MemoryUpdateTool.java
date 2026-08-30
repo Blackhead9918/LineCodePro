@@ -102,6 +102,30 @@ public final class MemoryUpdateTool extends BaseTool {
         }
         String projectId = context.getHomePath();
         store.saveMemory("", scope, projectId, content);
+
+        try {
+            cn.lineai.data.repository.ScopedMemoryRule.Hierarchy hierarchy =
+                    MemoryOverviewState.Memory.SCOPE_PROJECT.equals(scope)
+                            ? cn.lineai.data.repository.ScopedMemoryRule.Hierarchy.WORKSPACE
+                            : cn.lineai.data.repository.ScopedMemoryRule.Hierarchy.GLOBAL;
+            cn.lineai.data.repository.ScopedMemoryRule rule = new cn.lineai.data.repository.ScopedMemoryRule(
+                    "user_mem_" + System.currentTimeMillis() + "_" + Math.abs(content.hashCode() % 10000),
+                    hierarchy,
+                    cn.lineai.data.repository.ScopedMemoryRule.Category.PREFERENCE,
+                    projectId != null && !projectId.isEmpty() ? projectId : "*",
+                    "",
+                    "",
+                    content,
+                    1.0,
+                    cn.lineai.data.repository.ScopedMemoryRule.Status.VALIDATED,
+                    System.currentTimeMillis(),
+                    System.currentTimeMillis(),
+                    1
+            );
+            cn.lineai.data.repository.ScopedMemoryRegistry.getInstance().registerRule(rule);
+        } catch (Exception ignored) {
+        }
+
         return ok(context.getString(R.string.tool_memory_updated));
     }
 

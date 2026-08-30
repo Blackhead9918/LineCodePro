@@ -4,6 +4,7 @@ import cn.lineai.model.tool.ToolResult;
 import cn.lineai.model.ExtensionAgentConfig;
 import cn.lineai.tool.BaseTool;
 import cn.lineai.tool.R;
+import cn.lineai.tool.StoredAgentResult;
 import cn.lineai.tool.ToolCategory;
 import cn.lineai.tool.ToolContext;
 import cn.lineai.tool.ToolDisplayCategory;
@@ -94,7 +95,39 @@ public final class CustomAgentExtensionTool extends BaseTool {
             if (!agent.getMcpIds().isEmpty()) {
                 delegated.put("custom_mcp_ids", new JSONArray(agent.getMcpIds()));
             }
-            return context.getAgentRunner().runAgent(delegated, context);
+            ToolResult result = context.getAgentRunner().runAgent(delegated, context);
+            if (result != null) {
+                String content = result.getContent();
+                String fullOutput = "";
+                if (content != null && content.contains("linecode_agent_ref")) {
+                    try {
+                        JSONObject obj = new JSONObject(content);
+                        String agentId = obj.optString("agent_id", "");
+                        if (agentId.length() > 0 && context.getAgentResultStore() != null) {
+                            StoredAgentResult stored = context.getAgentResultStore().get(agentId);
+                            if (stored != null && stored.getFullOutput() != null && stored.getFullOutput().length() > 0) {
+                                fullOutput = stored.getFullOutput();
+                            }
+                        }
+                        if (fullOutput.length() == 0) {
+                            fullOutput = obj.optString("output", "");
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
+                if (fullOutput.length() > 0) {
+                    return new ToolResult(
+                            result.getToolCallId(),
+                            name,
+                            fullOutput,
+                            result.isError(),
+                            result.getDiffId(),
+                            result.getReviewState(),
+                            result.getReviewMessage()
+                    );
+                }
+            }
+            return result;
         } catch (Exception e) {
             return error(context.getString(R.string.tool_custom_agent_failed, e.getMessage()));
         }

@@ -55,6 +55,10 @@ public final class AgentToolResultDisplay {
         JSONObject progress = progressPayload(content);
         if (progress != null) {
             if (progress.optBoolean("linecode_agent_ref", false)) {
+                String output = progress.optString("output", "").trim();
+                if (output.length() > 0) {
+                    return output;
+                }
                 String preview = progress.optString("preview", "").trim();
                 if (preview.length() > 0) {
                     return preview;

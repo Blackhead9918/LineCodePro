@@ -2,6 +2,8 @@ package cn.lineai.tool.builtin;
 import cn.lineai.model.tool.ToolResult;
 
 import android.content.Context;
+import cn.lineai.data.repository.GroundedStateManager;
+import cn.lineai.model.grounding.GroundedSourceType;
 import cn.lineai.tool.BaseTool;
 import cn.lineai.tool.R;
 import cn.lineai.tool.ToolCategory;
@@ -107,6 +109,12 @@ public final class FileReadTool extends BaseTool {
                             input.optString("file_path")));
                 }
                 String content = FileIo.readUtf8(file);
+                GroundedStateManager.getInstance().recordState(
+                        file.getAbsolutePath(),
+                        content,
+                        GroundedSourceType.READ,
+                        context != null ? context.getToolCallId() : ""
+                );
                 String[] lines = content.split("\n", -1);
                 int totalLines = lines.length;
                 String numbered = addLineNumbers(content, 1);

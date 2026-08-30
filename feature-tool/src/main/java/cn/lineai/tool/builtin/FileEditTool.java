@@ -1,6 +1,8 @@
 package cn.lineai.tool.builtin;
 import cn.lineai.model.tool.ToolResult;
 
+import cn.lineai.data.repository.GroundedStateManager;
+import cn.lineai.model.grounding.GroundedSourceType;
 import cn.lineai.tool.BaseTool;
 import cn.lineai.tool.R;
 import cn.lineai.tool.ToolArgs;
@@ -73,8 +75,18 @@ public final class FileEditTool extends BaseTool {
                 return error(context.getString(R.string.tool_file_edit_is_directory, path));
             }
             String content = FileIo.readUtf8(file);
+            boolean isGrounded = GroundedStateManager.getInstance().isGrounded(file.getAbsolutePath());
+            if (!isGrounded) {
+                GroundedStateManager.getInstance().recordState(
+                        file.getAbsolutePath(),
+                        content,
+                        GroundedSourceType.READ,
+                        context != null ? context.getToolCallId() : ""
+                );
+            }
             if (!content.contains(oldString)) {
-                return error(context.getString(R.string.tool_file_edit_no_match));
+                return error(context.getString(R.string.tool_file_edit_no_match)
+                        + "\n[Diagnostic Hint]: Target string not found in physical file. Call file_read to refresh your line-by-line grounded snapshot.");
             }
             int count = countOccurrences(content, oldString);
             if (count > 1 && !replaceAll) {
@@ -90,6 +102,12 @@ public final class FileEditTool extends BaseTool {
             } finally {
                 output.close();
             }
+            GroundedStateManager.getInstance().recordState(
+                    file.getAbsolutePath(),
+                    next,
+                    GroundedSourceType.WRITE,
+                    context != null ? context.getToolCallId() : ""
+            );
             return ok(context.getString(
                     R.string.tool_file_edit_success,
                     FileToolPathPolicy.displayPath(context.getHomePath(), file),

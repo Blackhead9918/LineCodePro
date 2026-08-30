@@ -134,10 +134,21 @@ public final class AgentProgressSession {
         displayToolResults.put(displayId, result.withCall(displayId, originalCall.getName()));
     }
 
+    public synchronized String getThinking() {
+        return thinking;
+    }
+
+    public synchronized String getOutput() {
+        return output;
+    }
+
     public synchronized void markFinished(String nextStatus, boolean nextError, String nextModelContent) {
         status = nextStatus == null || nextStatus.length() == 0 ? "done" : nextStatus;
         error = nextError;
         modelContent = nextModelContent == null ? "" : nextModelContent;
+        if (nextModelContent != null && nextModelContent.length() > 0 && output.length() == 0) {
+            output = nextModelContent;
+        }
     }
 
     public synchronized void markStatus(String nextStatus, boolean nextError) {

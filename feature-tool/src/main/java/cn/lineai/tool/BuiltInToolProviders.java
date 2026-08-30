@@ -58,6 +58,7 @@ public final class BuiltInToolProviders {
         list.add((context, ipc) -> new AgentOutputTool());
         list.add((context, ipc) -> new TodoUpdateTool());
         list.add((context, ipc) -> new MemoryUpdateTool());
+        list.add((context, ipc) -> new cn.lineai.tool.builtin.MemoryRecallTool());
         list.add((context, ipc) -> new WebFetchTool());
         // Phone control tools need the accessibility service.
         list.add((context, ipc) -> new PhoneScreenshotTool(context));

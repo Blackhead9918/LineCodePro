@@ -131,6 +131,9 @@ public final class AgentResultRegistry implements ToolContext.AgentResultStore {
             object.put("status", record.getStatus());
             object.put("type", record.getType());
             object.put("description", record.getDescription());
+            if (record.getFullOutput().length() > 0) {
+                object.put("output", record.getFullOutput());
+            }
             object.put("preview", record.getPreview());
             object.put("tool_call_count", record.getToolCallCount());
             object.put("error", record.isError());
@@ -157,6 +160,7 @@ public final class AgentResultRegistry implements ToolContext.AgentResultStore {
             if (agentId.length() == 0) {
                 return null;
             }
+            String fullOutput = object.optString("output", "");
             return new AgentResultRecord(
                     agentId,
                     object.optString("tool_call_id", ""),
@@ -165,7 +169,7 @@ public final class AgentResultRegistry implements ToolContext.AgentResultStore {
                     object.optString("type", ""),
                     object.optString("description", ""),
                     object.optString("preview", ""),
-                    "",
+                    fullOutput,
                     "",
                     "",
                     object.optInt("tool_call_count", 0),

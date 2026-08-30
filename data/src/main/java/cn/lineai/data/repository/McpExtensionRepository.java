@@ -200,6 +200,11 @@ public final class McpExtensionRepository extends BaseRepository {
     private List<McpToolSummary> parseMcpToolResponse(String text) throws Exception {
         String jsonText = extractJsonFromEventStream(text);
         JSONObject parsed = new JSONObject(jsonText);
+        if (parsed.has("error") && !parsed.isNull("error")) {
+            JSONObject err = parsed.optJSONObject("error");
+            String errMsg = err != null ? err.optString("message", err.toString()) : parsed.optString("error");
+            throw new IllegalStateException("MCP tools/list error: " + errMsg);
+        }
         JSONObject result = parsed.optJSONObject("result");
         JSONObject data = parsed.optJSONObject("data");
         Object rawTools = result == null ? null : result.opt("tools");
@@ -226,10 +231,16 @@ public final class McpExtensionRepository extends BaseRepository {
         for (int i = 0; i < array.length(); i++) {
             Object raw = array.opt(i);
             if (raw instanceof String) {
-                tools.add(new McpToolSummary((String) raw, true, "", ""));
+                String toolName = ((String) raw).trim();
+                if (toolName.length() > 0) {
+                    tools.add(new McpToolSummary(toolName, true, "", ""));
+                }
             } else if (raw instanceof JSONObject) {
                 JSONObject item = (JSONObject) raw;
                 String name = item.optString("name").trim();
+                if (name.length() == 0) {
+                    name = item.optString("id").trim();
+                }
                 if (name.length() == 0) {
                     continue;
                 }
@@ -239,6 +250,9 @@ public final class McpExtensionRepository extends BaseRepository {
                 }
                 if (schema == null) {
                     schema = item.optJSONObject("schema");
+                }
+                if (schema == null) {
+                    schema = item.optJSONObject("parameters");
                 }
                 tools.add(new McpToolSummary(
                         name,
@@ -252,8 +266,12 @@ public final class McpExtensionRepository extends BaseRepository {
     }
 
     private String extractJsonFromEventStream(String text) {
+        String safeText = safe(text).trim();
+        if (safeText.startsWith("{") && safeText.endsWith("}")) {
+            return safeText;
+        }
         StringBuilder data = new StringBuilder();
-        String[] lines = safe(text).split("\\r?\\n");
+        String[] lines = safeText.split("\\r?\\n");
         for (String line : lines) {
             if (!line.startsWith("data:")) {
                 continue;
@@ -264,7 +282,7 @@ public final class McpExtensionRepository extends BaseRepository {
             }
             data.append(value);
         }
-        return data.length() == 0 ? safe(text) : data.toString();
+        return data.length() == 0 ? safeText : data.toString();
     }
 
 }

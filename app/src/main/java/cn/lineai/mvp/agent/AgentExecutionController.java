@@ -281,6 +281,8 @@ public final class AgentExecutionController {
         String progressJson = "";
         try {
             if (progress != null) {
+                progress.markFinished(result.isError() ? "error" : "done", result.isError(), fullOutput);
+                progress.applyTurnResult(fullOutput, progress.getThinking());
                 progressJson = progress.snapshotResult().getContent();
             }
         } catch (Exception ignored) {
@@ -290,7 +292,7 @@ public final class AgentExecutionController {
         agentResultRegistry.updateFullOutput(
                 agentId,
                 fullOutput,
-                "",
+                progress != null ? progress.getThinking() : "",
                 progressJson,
                 result.getToolCallCount(),
                 result.isError()
@@ -306,7 +308,11 @@ public final class AgentExecutionController {
                 result.isError() ? "error" : "done",
                 ""
         );
-        host.addOrReplaceToolResult(compactResult);
+        if (progress != null && progress.canRender()) {
+            host.addOrReplaceToolResult(progress.snapshotResult());
+        } else {
+            host.addOrReplaceToolResult(compactResult);
+        }
         host.render();
         return compactResult;
     }
@@ -427,7 +433,7 @@ public final class AgentExecutionController {
         ToolResult finalProgress = ToolResult.withReview(
                 toolCallId,
                 AgentPipelineTool.NAME,
-                compact,
+                pipelineProgress.payload(),
                 hasError,
                 "",
                 hasError ? "error" : "done",
@@ -450,10 +456,9 @@ public final class AgentExecutionController {
         String agentId = agentResultRegistry.allocateId();
         agentResultRegistry.put(AgentResultRecord.running(
                 agentId, toolCallId, AgentPipelineTool.NAME, "pipeline", "pipeline", false, 0));
-        agentResultRegistry.updateFullOutput(agentId, message, "", "", 0, true);
-        String compact = AgentResultRegistry.toCompactJson(agentResultRegistry.getRecord(agentId));
+        agentResultRegistry.updateFullOutput(agentId, message, "", pipelineProgress.payload(), 0, true);
         ToolResult finalProgress = ToolResult.withReview(
-                toolCallId, AgentPipelineTool.NAME, compact, true, "", "error", "");
+                toolCallId, AgentPipelineTool.NAME, pipelineProgress.payload(), true, "", "error", "");
         host.addOrReplaceToolResult(finalProgress);
         return finalProgress;
     }

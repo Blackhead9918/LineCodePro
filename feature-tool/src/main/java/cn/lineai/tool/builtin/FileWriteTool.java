@@ -1,6 +1,8 @@
 package cn.lineai.tool.builtin;
 import cn.lineai.model.tool.ToolResult;
 
+import cn.lineai.data.repository.GroundedStateManager;
+import cn.lineai.model.grounding.GroundedSourceType;
 import cn.lineai.tool.BaseTool;
 import cn.lineai.tool.R;
 import cn.lineai.tool.ToolArgs;
@@ -72,6 +74,12 @@ public final class FileWriteTool extends BaseTool {
                 output.close();
             }
             int lineCount = input.optString("content").split("\n", -1).length;
+            GroundedStateManager.getInstance().recordState(
+                    file.getAbsolutePath(),
+                    input.optString("content"),
+                    existed ? GroundedSourceType.WRITE : GroundedSourceType.CREATE,
+                    context != null ? context.getToolCallId() : ""
+            );
             return ok(context.getString(existed ? R.string.tool_file_write_updated : R.string.tool_file_write_created, path, lineCount));
         } catch (Exception e) {
             return error(context.getString(R.string.tool_file_write_failed, e.getMessage()));

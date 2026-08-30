@@ -88,14 +88,75 @@ public final class ToolExecutor {
             restoreInterrupt(e);
             return ToolResult.of(toolCall.getId(), tool.getName(), "参数解析失败: " + describeException(e), true);
         }
+        PreFlightGroundingValidator.ValidationOutcome preFlight =
+                PreFlightGroundingValidator.getInstance().validatePreFlight(tool, input, callContext);
+        long startTime = System.currentTimeMillis();
         try {
             ToolResult result = diffRecorder != null && diffRecorder.shouldRecordDiff(tool)
                     ? diffRecorder.executeWithDiff(tool, input, callContext)
                     : tool.execute(input, callContext);
+            long durationMs = System.currentTimeMillis() - startTime;
+            boolean isError = result != null && result.isError();
+            String resultContent = result != null ? result.getContent() : "";
+
+            // If error occurred and we had pre-flight advice, append diagnostic hint
+            if (isError && preFlight.getDiagnosticAdvice() != null && !resultContent.contains("[Pre-Flight")) {
+                resultContent = resultContent + "\n\n" + preFlight.getDiagnosticAdvice();
+                result = ToolResult.of(toolCall.getId(), tool.getName(), resultContent, true);
+            }
+
+            // Log accuracy telemetry
+            String targetPath = input.optString("path", input.optString("file_path", input.optString("target_file", input.optString("command", ""))));
+            boolean isGrounded = preFlight.getConfidenceReport().getGroundedFactor() >= 0.90;
+            cn.lineai.data.repository.AgentAccuracyLogger.getInstance().logExecution(
+                    tool.getName(),
+                    targetPath,
+                    false,
+                    isGrounded,
+                    !isError,
+                    preFlight.getConfidenceReport().getTotalScore(),
+                    resultContent,
+                    durationMs
+            );
+
+            if (isError) {
+                cn.lineai.data.repository.PostMortemLearningEngine.getInstance().recordFailure(
+                        callContext.getHomePath(),
+                        tool.getName(),
+                        input.toString(),
+                        resultContent
+                );
+            } else {
+                cn.lineai.data.repository.PostMortemLearningEngine.getInstance().recordSuccess(
+                        callContext.getHomePath(),
+                        tool.getName(),
+                        input.toString(),
+                        resultContent
+                );
+            }
             return result.withCall(toolCall.getId(), tool.getName());
         } catch (Exception e) {
+            long durationMs = System.currentTimeMillis() - startTime;
             restoreInterrupt(e);
-            return ToolResult.of(toolCall.getId(), tool.getName(), "工具执行失败: " + describeException(e), true);
+            String err = describeException(e);
+            String targetPath = input.optString("path", input.optString("file_path", input.optString("target_file", input.optString("command", ""))));
+            cn.lineai.data.repository.AgentAccuracyLogger.getInstance().logExecution(
+                    tool.getName(),
+                    targetPath,
+                    false,
+                    false,
+                    false,
+                    preFlight.getConfidenceReport().getTotalScore(),
+                    err,
+                    durationMs
+            );
+            cn.lineai.data.repository.PostMortemLearningEngine.getInstance().recordFailure(
+                    callContext.getHomePath(),
+                    tool.getName(),
+                    input.toString(),
+                    err
+            );
+            return ToolResult.of(toolCall.getId(), tool.getName(), "工具执行失败: " + err, true);
         }
     }
 
