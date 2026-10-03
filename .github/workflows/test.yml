@@ -24,10 +24,13 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: latest
+      # ubuntu-latest already ships the Android SDK + cmdline-tools. The former
+      # android-actions/setup-android@v3 step failed because the SDK repository no longer
+      # provides the 'tools' package (sdkmanager exits 1), so use the preinstalled SDK.
+      - name: Locate Android SDK
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          sdkmanager --version
 
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses > /dev/null 2>&1 || true
