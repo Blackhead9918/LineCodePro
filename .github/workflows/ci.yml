@@ -35,8 +35,16 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Run unit tests
+      - name: Run app unit tests
         run: ./gradlew :app:testDebugUnitTest
+
+      - name: Run module unit tests
+        run: >-
+          ./gradlew :core-model:test :core-security:test
+          :data:testDebugUnitTest :feature-tool:testDebugUnitTest
+          :feature-model:testDebugUnitTest :feature-ssh:testDebugUnitTest
+          :feature-share:testDebugUnitTest :markdown:testDebugUnitTest
+          :tool-ui:testDebugUnitTest
 
       - name: Run lint
         run: ./gradlew :app:lintDebug
@@ -44,8 +52,8 @@ jobs:
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug
 
-      - name: Build user-cert debug APK
-        run: ./gradlew :app:assembleDebugUserCert
+      - name: Build + export user-cert debug APK
+        run: ./gradlew :app:exportDebugUserCertApk
 
       # Optimized (R8 minified + resource shrunk) release build without signing keys.
       # NOTE: an unsigned APK cannot be installed as-is; sign it locally with apksigner
@@ -54,6 +62,7 @@ jobs:
         run: ./gradlew :app:assembleReleaseUnsigned
 
       - name: Upload debug APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
@@ -62,6 +71,7 @@ jobs:
           retention-days: 14
 
       - name: Upload user-cert debug APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-user-cert
@@ -70,6 +80,7 @@ jobs:
           retention-days: 14
 
       - name: Upload unsigned optimized release APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: app-release-unsigned
