@@ -26,7 +26,7 @@ public final class MemoryRecallToolTest {
     }
 
     @Test
-    public void emptyQueryIsError() {
+    public void emptyQueryIsError() throws Exception {
         MemoryRecallTool tool = new MemoryRecallTool();
         ToolResult result = tool.execute(new JSONObject().put("query", "   "), context(new FakeStore()));
         assertTrue(result.isError());
@@ -34,7 +34,7 @@ public final class MemoryRecallToolTest {
     }
 
     @Test
-    public void missingStoreIsError() {
+    public void missingStoreIsError() throws Exception {
         MemoryRecallTool tool = new MemoryRecallTool();
         ToolContext context = ToolContext.builder()
                 .homePath("/workspace")
