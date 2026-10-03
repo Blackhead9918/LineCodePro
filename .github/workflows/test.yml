@@ -27,10 +27,13 @@ jobs:
       # ubuntu-latest already ships the Android SDK + cmdline-tools. The former
       # android-actions/setup-android@v3 step failed because the SDK repository no longer
       # provides the 'tools' package (sdkmanager exits 1), so use the preinstalled SDK.
-      - name: Locate Android SDK
+      - name: Add Android SDK tools to PATH
         run: |
-          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          sdkmanager --version
+          SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+          echo "Using Android SDK at $SDK_ROOT"
 
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses > /dev/null 2>&1 || true
