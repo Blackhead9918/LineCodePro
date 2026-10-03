@@ -12,7 +12,9 @@ import cn.lineai.tool.ToolDisplayCategory;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 import org.json.JSONObject;
 
 public final class FileReadTool extends BaseTool {
@@ -75,7 +77,12 @@ public final class FileReadTool extends BaseTool {
         try {
             File file = FileToolPathPolicy.resolve(context, input.optString("file_path"));
             if (!file.exists()) {
-                return error(context.getString(R.string.tool_file_read_not_found, FileToolPathPolicy.displayPath(context.getHomePath(), file)));
+                String message = context.getString(R.string.tool_file_read_not_found, FileToolPathPolicy.displayPath(context.getHomePath(), file));
+                String similar = similarFiles(file);
+                if (similar.length() > 0) {
+                    message += "\n" + context.getString(R.string.tool_file_read_similar_files, similar);
+                }
+                return error(message);
             }
             if (file.isDirectory()) {
                 StringBuilder builder = new StringBuilder();
@@ -293,6 +300,45 @@ public final class FileReadTool extends BaseTool {
                 count[0]++;
             }
         }
+    }
+
+    /**
+     * 在目标目录中查找名称相近的文件，降低路径拼写错误导致的无效重试。
+     * 只做大小写不敏感的子串匹配（最多 3 个），不猜测更深层的路径。
+     */
+    private static String similarFiles(File file) {
+        File parent = file.getParentFile();
+        if (parent == null || !parent.isDirectory()) {
+            return "";
+        }
+        String name = file.getName().toLowerCase(Locale.ROOT);
+        String stem = name;
+        int dot = name.lastIndexOf('.');
+        if (dot > 0) {
+            stem = name.substring(0, dot);
+        }
+        if (stem.length() < 2) {
+            return "";
+        }
+        File[] items = parent.listFiles();
+        if (items == null) {
+            return "";
+        }
+        Arrays.sort(items, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        ArrayList<String> matches = new ArrayList<>();
+        for (File item : items) {
+            String itemName = item.getName();
+            if (itemName.startsWith(".")) {
+                continue;
+            }
+            if (itemName.toLowerCase(Locale.ROOT).contains(stem)) {
+                matches.add(itemName + (item.isDirectory() ? "/" : ""));
+                if (matches.size() >= 3) {
+                    break;
+                }
+            }
+        }
+        return String.join(", ", matches);
     }
 
     /** 将绝对路径转换为相对于工作区的展示路径。 */

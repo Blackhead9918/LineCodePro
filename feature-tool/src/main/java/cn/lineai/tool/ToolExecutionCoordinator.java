@@ -15,18 +15,34 @@ public final class ToolExecutionCoordinator {
         this.toolRegistry = toolRegistry;
     }
 
+    /**
+     * Splits the model's tool calls into a parallel batch and a sequential remainder
+     * while preserving the requested execution order.
+     *
+     * <p>Only a leading run of concurrency-safe calls is executed in parallel; as soon
+     * as one non-safe call is seen, every later call is executed sequentially. This is
+     * deliberate: running a concurrency-safe call (e.g. {@code file_read}, {@code glob},
+     * {@code git_status}) before an earlier write/shell call that precedes it in the
+     * model's intent would let the model observe stale state — a read requested after
+     * an edit must happen after the edit, not before it.</p>
+     */
     public ToolExecutionPlan createPlan(List<ToolCall> toolCalls) {
         ArrayList<ToolCall> concurrentTasks = new ArrayList<>();
         ArrayList<ToolCall> sequentialTasks = new ArrayList<>();
         if (toolCalls == null) {
             return new ToolExecutionPlan(concurrentTasks, sequentialTasks);
         }
+        boolean parallelPrefixOpen = true;
         for (ToolCall toolCall : toolCalls) {
-            if (isConcurrencySafe(toolCall)) {
-                concurrentTasks.add(toolCall);
-            } else {
-                sequentialTasks.add(toolCall);
+            if (toolCall == null) {
+                continue;
             }
+            if (parallelPrefixOpen && isConcurrencySafe(toolCall)) {
+                concurrentTasks.add(toolCall);
+                continue;
+            }
+            parallelPrefixOpen = false;
+            sequentialTasks.add(toolCall);
         }
         return new ToolExecutionPlan(concurrentTasks, sequentialTasks);
     }
@@ -35,6 +51,8 @@ public final class ToolExecutionCoordinator {
         if (toolCall == null || toolRegistry == null) {
             return false;
         }
+        // An unknown/unregistered tool is never concurrency safe, so it keeps its
+        // sequential position and its "unknown tool" error stays in order.
         BaseTool tool = toolRegistry.get(toolCall.getName());
         return tool != null && tool.isConcurrencySafe();
     }

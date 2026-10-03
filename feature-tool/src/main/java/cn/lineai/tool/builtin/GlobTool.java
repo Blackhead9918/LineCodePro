@@ -109,7 +109,10 @@ public final class GlobTool extends BaseTool {
             String name = item.getName();
             String relative = parentPath.length() == 0 ? name : parentPath + "/" + name;
             if (item.isDirectory()) {
-                if (!name.startsWith(".") && !"node_modules".equals(name)) {
+                // Skip only the heavy metadata directory and dependencies; other dot-directories
+                // (.github, .vscode, .config, ...) must stay searchable, otherwise the agent can
+                // miss CI/config files and wrongly conclude they do not exist.
+                if (!".git".equals(name) && !"node_modules".equals(name)) {
                     search(item, relative, pattern, compiled, results);
                 }
             } else if (compiled.matcher(relative).matches()

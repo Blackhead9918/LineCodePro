@@ -1,6 +1,7 @@
 <resources>
     <!-- FileReadTool -->
     <string name="tool_file_read_not_found">File not found: %1$s</string>
+    <string name="tool_file_read_similar_files">Similar files in the same directory: %1$s</string>
     <string name="tool_file_read_empty_dir">(empty directory)</string>
     <string name="tool_file_read_dir_content">Directory %1$s:\n%2$s</string>
     <string name="tool_file_read_dir_specify_file">\n\nTo read a file, specify the exact file path.</string>
@@ -56,6 +57,7 @@
     <string name="tool_list_dir_empty">Directory %1$s:\n(empty directory)</string>
     <string name="tool_list_dir_content">Directory %1$s:\n</string>
     <string name="tool_list_dir_failed">Failed to list directory: %1$s</string>
+    <string name="tool_list_dir_truncated">… (+%1$d more entries not shown)</string>
 
     <!-- AgentTool -->
     <string name="tool_agent_invalid_type">Agent type must be explore or sub-coding.</string>
@@ -95,6 +97,10 @@
     <string name="tool_memory_updated">Memory updated.</string>
     <string name="tool_memory_updated_label">Memory updated</string>
     <string name="tool_call_action_memory">Memory</string>
+    <string name="tool_memory_recall_query_empty">Search query cannot be empty.</string>
+    <string name="tool_memory_recall_header">Memory recall for "%1$s" (scope: %2$s) — %3$d match(es):</string>
+    <string name="tool_memory_recall_empty">No stored long-term memory matches "%1$s" (scope: %2$s). Do not guess: tell the user nothing was found, or retry with different keywords.</string>
+    <string name="tool_memory_recall_failed">Memory search failed: %1$s</string>
 
     <!-- ImageGenerationTool -->
     <string name="tool_img_gen_no_context">Image generation tool is not connected to the app context.</string>

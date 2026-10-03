@@ -45,6 +45,31 @@ public final class ToolResultTest {
     }
 
     @Test
+    public void truncateContent_markerWarnsOmittedContentWasNotRead() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < ToolResult.MAX_TOOL_RESULT_CHARS + 100; i++) {
+            sb.append('x');
+        }
+        String result = ToolResult.truncateContent(sb.toString());
+
+        Assert.assertTrue(result.contains("chars truncated"));
+        Assert.assertTrue(result.contains("NOT read"));
+        Assert.assertTrue(result.contains("do not guess"));
+    }
+
+    @Test
+    public void truncateContent_isIdempotentForAlreadyTruncatedContent() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < ToolResult.MAX_TOOL_RESULT_CHARS + 5000; i++) {
+            sb.append('x');
+        }
+        String once = ToolResult.truncateContent(sb.toString());
+        String twice = ToolResult.truncateContent(once);
+
+        Assert.assertSame(once, twice);
+    }
+
+    @Test
     public void truncateContent_preservesHeadAndTail() {
         String prefix = "PREFIX_START_";
         String suffix = "_SUFFIX_END";

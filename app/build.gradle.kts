@@ -139,6 +139,14 @@ android {
                 debugSymbolLevel = "NONE"
             }
         }
+        create("releaseUnsigned") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            // Intentionally unsigned (CI/local verification builds). signingConfig is cleared
+            // explicitly because initWith would inherit the release signing config whenever
+            // signing.properties exists on the machine.
+            signingConfig = null
+        }
         create("debugUserCert") {
             initWith(getByName("debug"))
             matchingFallbacks += listOf("debug")
@@ -203,7 +211,8 @@ configurations.matching {
 }
 
 tasks.matching {
-    it.name == "minifyReleaseWithR8" || it.name == "minifyReleaseWithProguard"
+    it.name == "minifyReleaseWithR8" || it.name == "minifyReleaseWithProguard" ||
+        it.name == "minifyReleaseUnsignedWithR8" || it.name == "minifyReleaseUnsignedWithProguard"
 }.configureEach {
     dependsOn(generateReleaseObfuscationDictionary)
 }

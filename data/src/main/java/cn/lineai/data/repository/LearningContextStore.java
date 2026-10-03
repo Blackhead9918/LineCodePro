@@ -30,4 +30,17 @@ public interface LearningContextStore {
      * 将指定会话索引到对话索引中。
      */
     void indexConversation(String projectId, ConversationRecord conversation);
+
+    /**
+     * 检索长期记忆（供 memory_recall 工具使用）。
+     * <p>
+     * 仅返回与 {@code query} 关键词真正匹配的记忆（按相关性排序，无匹配时返回空列表），
+     * 不会为了“凑数”返回不相关的记忆，避免给模型噪声。命中项会更新使用统计。
+     *
+     * @param projectId 当前工作区路径，用于过滤 project / environment 作用域的记忆
+     * @param query     检索关键词
+     * @param scope     all | user | project | environment，未知值按 all 处理
+     * @param limit     最多返回条数（调用方负责限制上限）
+     */
+    java.util.List<MemoryRanker.Candidate> searchMemories(String projectId, String query, String scope, int limit);
 }

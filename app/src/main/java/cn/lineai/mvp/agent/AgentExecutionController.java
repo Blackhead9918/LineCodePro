@@ -826,17 +826,21 @@ public final class AgentExecutionController {
         if (!customToolNames.isEmpty() && !customToolNames.contains(name)) {
             return false;
         }
+        Set<ToolCategory> allowed = getAgentAllowedCategories(type);
+        boolean isRestrictedToRead = allowed.size() == 1 && allowed.contains(ToolCategory.READ);
+        if (isRestrictedToRead) {
+            // Read-only agents (explore) stay read-only in every execution mode. The
+            // remote-mode bypass below exists so coding agents can reach remote-only
+            // tools (shell/file tools that are unavailable locally), but it must never
+            // hand an explore agent shell_execute, shell writes, or file writes.
+            return allowed.contains(tool.getCategory());
+        }
         if (isRemoteExecutionMode()) {
             return true;
         }
         if (tool.needsConfirmation() && tool.getCategory() == ToolCategory.WRITE
                 && tool.getDisplayCategory() == ToolDisplayCategory.DELETE) {
             return false;
-        }
-        Set<ToolCategory> allowed = getAgentAllowedCategories(type);
-        boolean isRestrictedToRead = allowed.size() == 1 && allowed.contains(ToolCategory.READ);
-        if (isRestrictedToRead) {
-            return allowed.contains(tool.getCategory());
         }
         if (tool.isAllowedInReadonlyMode()) {
             return true;

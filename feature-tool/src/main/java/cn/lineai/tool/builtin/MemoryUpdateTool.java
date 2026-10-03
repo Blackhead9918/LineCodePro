@@ -102,30 +102,12 @@ public final class MemoryUpdateTool extends BaseTool {
         }
         String projectId = context.getHomePath();
         store.saveMemory("", scope, projectId, content);
-
-        try {
-            cn.lineai.data.repository.ScopedMemoryRule.Hierarchy hierarchy =
-                    MemoryOverviewState.Memory.SCOPE_PROJECT.equals(scope)
-                            ? cn.lineai.data.repository.ScopedMemoryRule.Hierarchy.WORKSPACE
-                            : cn.lineai.data.repository.ScopedMemoryRule.Hierarchy.GLOBAL;
-            cn.lineai.data.repository.ScopedMemoryRule rule = new cn.lineai.data.repository.ScopedMemoryRule(
-                    "user_mem_" + System.currentTimeMillis() + "_" + Math.abs(content.hashCode() % 10000),
-                    hierarchy,
-                    cn.lineai.data.repository.ScopedMemoryRule.Category.PREFERENCE,
-                    projectId != null && !projectId.isEmpty() ? projectId : "*",
-                    "",
-                    "",
-                    content,
-                    1.0,
-                    cn.lineai.data.repository.ScopedMemoryRule.Status.VALIDATED,
-                    System.currentTimeMillis(),
-                    System.currentTimeMillis(),
-                    1
-            );
-            cn.lineai.data.repository.ScopedMemoryRegistry.getInstance().registerRule(rule);
-        } catch (Exception ignored) {
-        }
-
+        // The memory is persisted in the memories table only. Earlier this method also
+        // mirrored the text into ScopedMemoryRegistry as a VALIDATED rule, which made the
+        // model's own wording show up in the system prompt as an authoritative "project
+        // invariant". That duplicated the source of truth and injected unvetted text into
+        // every later request, so the mirror write was removed: a memory reaches the model
+        // through the normal learning-context path, subject to Learning Mode.
         return ok(context.getString(R.string.tool_memory_updated));
     }
 

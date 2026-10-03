@@ -15,6 +15,7 @@ import java.util.UUID;
 public final class LearningContextRepository extends BaseRepository implements LearningContextStore {
     private static final int SCAN_LIMIT = 120;
     private static final int OVERVIEW_LIMIT = 200;
+    private static final String SCOPE_FILTER_ALL = "all";
 
     private final WorkspacePaths workspacePaths;
     private final ConversationIndexer conversationIndexer;
@@ -176,6 +177,52 @@ public final class LearningContextRepository extends BaseRepository implements L
             cursor.close();
         }
         return items;
+    }
+
+    /**
+     * memory_recall 的数据入口：按 scope 过滤 + 关键词相关性排序。
+     * <p>
+     * {@code allowRecentFallback=false}，即没有任何关键词命中时返回空列表 —— 宁可比模型
+     * 收到“没找到”，也不要塞入不相关记忆诱导模型编造理由。
+     */
+    @Override
+    public synchronized List<MemoryRanker.Candidate> searchMemories(String projectId, String query, String scope, int limit) {
+        int safeLimit = Math.min(Math.max(limit, 1), 10);
+        String normalizedScope = normalizeScopeFilter(scope);
+        StringBuilder sql = new StringBuilder(
+                "SELECT id, scope, project_id, source, confidence, content, updated_at FROM memories WHERE 1 = 1");
+        ArrayList<String> args = new ArrayList<>();
+        if (!SCOPE_FILTER_ALL.equals(normalizedScope)) {
+            sql.append(" AND scope = ?");
+            args.add(normalizedScope);
+        }
+        if (!MemoryOverviewState.Memory.SCOPE_USER.equals(normalizedScope)) {
+            sql.append(" AND (project_id = ? OR project_id IS NULL OR project_id = '')");
+            args.add(safe(projectId));
+        }
+        sql.append(" ORDER BY updated_at DESC LIMIT ?");
+        args.add(String.valueOf(SCAN_LIMIT));
+
+        ArrayList<MemoryRanker.Candidate> candidates = new ArrayList<>();
+        Cursor cursor = database.getReadableDatabase().rawQuery(sql.toString(), args.toArray(new String[0]));
+        try {
+            while (cursor.moveToNext()) {
+                String memoryScope = value(cursor, "scope");
+                String memoryProject = value(cursor, "project_id");
+                String source = value(cursor, "source");
+                String content = compact(value(cursor, "content"), 520);
+                String scopeLabel = memoryProject.length() == 0 ? memoryScope : memoryScope + ":" + memoryProject;
+                String confidence = String.format(Locale.ROOT, "%.2f", cursor.getDouble(cursor.getColumnIndexOrThrow("confidence")));
+                candidates.add(new MemoryRanker.Candidate(value(cursor, "id"), content + " " + source + " " + scopeLabel,
+                        cursor.getLong(cursor.getColumnIndexOrThrow("updated_at")),
+                        "- [" + scopeLabel + "/" + source + ", confidence " + confidence + "] " + content));
+            }
+        } finally {
+            cursor.close();
+        }
+        List<MemoryRanker.Candidate> ranked = MemoryRanker.rank(candidates, safe(query), safeLimit, false);
+        markMemoriesUsed(ranked);
+        return ranked;
     }
 
     public List<MemoryRanker.Candidate> readConversationIndex(String projectId, String excludeConversationId) {
@@ -419,6 +466,16 @@ public final class LearningContextRepository extends BaseRepository implements L
             value = value.replace("  ", " ");
         }
         return value.length() <= maxChars ? value : value.substring(0, Math.max(0, maxChars - 3)) + "...";
+    }
+
+    private String normalizeScopeFilter(String scope) {
+        String value = safe(scope).trim().toLowerCase(Locale.ROOT);
+        if (MemoryOverviewState.Memory.SCOPE_USER.equals(value)
+                || MemoryOverviewState.Memory.SCOPE_PROJECT.equals(value)
+                || MemoryOverviewState.Memory.SCOPE_ENVIRONMENT.equals(value)) {
+            return value;
+        }
+        return SCOPE_FILTER_ALL;
     }
 
     private String normalizeScope(String scope) {

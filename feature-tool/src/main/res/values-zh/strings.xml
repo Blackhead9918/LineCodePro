@@ -1,6 +1,7 @@
 <resources>
     <!-- FileReadTool -->
     <string name="tool_file_read_not_found">文件不存在: %1$s</string>
+    <string name="tool_file_read_similar_files">同目录下的相似文件: %1$s</string>
     <string name="tool_file_read_empty_dir">(空目录)</string>
     <string name="tool_file_read_dir_content">目录 %1$s:\n%2$s</string>
     <string name="tool_file_read_dir_specify_file">\n\n如需读取文件，请指定具体文件路径。</string>
@@ -56,6 +57,7 @@
     <string name="tool_list_dir_empty">目录 %1$s:\n(空目录)</string>
     <string name="tool_list_dir_content">目录 %1$s:\n</string>
     <string name="tool_list_dir_failed">列目录失败: %1$s</string>
+    <string name="tool_list_dir_truncated">…（另有 %1$d 个条目未显示）</string>
 
     <!-- AgentTool -->
     <string name="tool_agent_invalid_type">Agent 类型只能是 explore 或 sub-coding。</string>
@@ -95,6 +97,10 @@
     <string name="tool_memory_updated">记忆已更新。</string>
     <string name="tool_memory_updated_label">记忆已更新</string>
     <string name="tool_call_action_memory">记忆</string>
+    <string name="tool_memory_recall_query_empty">检索关键词不能为空。</string>
+    <string name="tool_memory_recall_header">记忆检索："%1$s"（范围：%2$s），命中 %3$d 条：</string>
+    <string name="tool_memory_recall_empty">没有匹配 "%1$s"（范围：%2$s）的长期记忆。请勿猜测：告知用户未找到，或换个关键词重试。</string>
+    <string name="tool_memory_recall_failed">记忆检索失败：%1$s</string>
 
     <!-- ImageGenerationTool -->
     <string name="tool_img_gen_no_context">图片生成工具未接入应用上下文。</string>

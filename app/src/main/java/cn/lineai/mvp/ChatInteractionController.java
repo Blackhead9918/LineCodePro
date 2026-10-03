@@ -221,7 +221,11 @@ final class ChatInteractionController {
         host.startGenerationKeepAlive();
         host.render();
 
-        String activeUserMessageId = messages.get(messages.size() - 1).getId();
+        // Use the id of the message we just appended, not the id of the last message in
+        // the list: a model-switch notice (or another injected notice) may have been
+        // appended after it, and compaction relies on this id to keep the current user
+        // turn verbatim instead of summarizing it away.
+        String activeUserMessageId = userMessage.getId();
         if (contextCompactionController.shouldAutoCompactBeforeRequest(selectedModel, activeUserMessageId)) {
             contextCompactionController.startContextCompaction(
                     generationId,

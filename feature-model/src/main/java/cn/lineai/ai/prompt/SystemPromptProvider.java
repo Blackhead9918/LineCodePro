@@ -98,26 +98,14 @@ public final class SystemPromptProvider {
             sb.append(learningContext.trim()).append("\n\n");
         }
 
-        // 3. Grounded Scoped Invariants & Lessons
-        try {
-            java.util.List<cn.lineai.data.repository.ScopedMemoryRule> autoRules =
-                    cn.lineai.data.repository.ScopedMemoryRegistry.getInstance().selectEligibleRules(homePath, null);
-            if (autoRules != null && !autoRules.isEmpty()) {
-                sb.append("### Grounded Project Invariants & Lessons:\n");
-                for (cn.lineai.data.repository.ScopedMemoryRule rule : autoRules) {
-                    sb.append("- [").append(rule.getCategory().name()).append("] ")
-                            .append(rule.getRecommendedRule());
-                    if (rule.getCondition() != null && !rule.getCondition().trim().isEmpty()) {
-                        sb.append(" (Condition: ").append(rule.getCondition()).append(")");
-                    }
-                    sb.append("\n");
-                }
-                sb.append("\n");
-            }
-        } catch (Exception ignored) {
-        }
-
-        // 4. Grounded Pre-Flight Reasoning Guidelines
+        // 3. Grounded Pre-Flight Reasoning Guidelines
+        // Note: auto-distilled ScopedMemoryRegistry rules used to be injected here as
+        // "Grounded Project Invariants & Lessons". They are machine-generated from
+        // failure/success pairs by PostMortemLearningEngine, may embed raw error output,
+        // and are auto-promoted to VALIDATED without any user review, so they were removed
+        // from the prompt: unvetted text (and error-derived injection vectors) must not
+        // become authoritative instructions in every request. The registry is still used
+        // internally for confidence scoring.
         sb.append("### Grounded Execution Guidelines:\n")
           .append("1. Always call `file_read` before attempting `file_edit` on any file.\n")
           .append("2. Maintain continuous grounded verification; do not assume file content based on assumptions.\n")

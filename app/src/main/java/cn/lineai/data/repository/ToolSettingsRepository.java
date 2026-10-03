@@ -66,13 +66,13 @@ public final class ToolSettingsRepository implements ToolSettingsStore {
                 resourceProvider.getString(R.string.tool_group_file_ops_name),
                 resourceProvider.getString(R.string.tool_group_file_ops_desc),
                 true,
-                new String[] {ToolNames.FILE_READ, ToolNames.FILE_WRITE, ToolNames.FILE_EDIT, ToolNames.FILE_DELETE, ToolNames.GLOB, ToolNames.LIST_DIR},
+                new String[] {ToolNames.FILE_READ, ToolNames.FILE_OUTLINE, ToolNames.FILE_WRITE, ToolNames.FILE_EDIT, ToolNames.FILE_MULTI_EDIT, ToolNames.FILE_DELETE, ToolNames.GLOB, ToolNames.LIST_DIR},
                 MODE_LOCAL, "file_ops"));
         configs.add(new McpToolConfig(ToolNames.AGENT,
                 "Agent",
                 resourceProvider.getString(R.string.tool_group_agent_desc),
                 true,
-                new String[] {ToolNames.AGENT, ToolNames.AGENT_PIPELINE},
+                new String[] {ToolNames.AGENT, ToolNames.AGENT_PIPELINE, ToolNames.AGENT_OUTPUT},
                 MODE_ALL, "agent"));
         configs.add(new McpToolConfig("phone_control",
                 resourceProvider.getString(R.string.tool_group_phone_control_name),
@@ -86,6 +86,12 @@ public final class ToolSettingsRepository implements ToolSettingsStore {
                 true,
                 new String[] {ToolNames.TODO_UPDATE},
                 MODE_ALL, "todo"));
+        configs.add(new McpToolConfig("memory",
+                resourceProvider.getString(R.string.tool_group_memory_name),
+                resourceProvider.getString(R.string.tool_group_memory_desc),
+                true,
+                new String[] {ToolNames.MEMORY_UPDATE, ToolNames.MEMORY_RECALL},
+                MODE_ALL, "memory"));
         configs.add(new McpToolConfig(ToolNames.IMAGE_UNDERSTANDING,
                 resourceProvider.getString(R.string.tool_group_image_understanding_name),
                 resourceProvider.getString(R.string.tool_group_image_understanding_desc),

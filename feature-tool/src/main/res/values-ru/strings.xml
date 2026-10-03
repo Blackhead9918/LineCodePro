@@ -1,6 +1,7 @@
 <resources>
     <!-- FileReadTool -->
     <string name="tool_file_read_not_found">Файл не найден: %1$s</string>
+    <string name="tool_file_read_similar_files">Похожие файлы в том же каталоге: %1$s</string>
     <string name="tool_file_read_empty_dir">(пустой каталог)</string>
     <string name="tool_file_read_dir_content">Каталог %1$s:\n%2$s</string>
     <string name="tool_file_read_dir_specify_file">\n\nДля чтения файла укажите точный путь к файлу.</string>
@@ -56,6 +57,7 @@
     <string name="tool_list_dir_empty">Каталог %1$s:\n(пустой каталог)</string>
     <string name="tool_list_dir_content">Каталог %1$s:\n</string>
     <string name="tool_list_dir_failed">Не удалось получить содержимое каталога: %1$s</string>
+    <string name="tool_list_dir_truncated">… (ещё %1$d записей не показано)</string>
 
     <!-- AgentTool -->
     <string name="tool_agent_invalid_type">Тип Agent должен быть explore или sub-coding.</string>
@@ -95,6 +97,10 @@
     <string name="tool_memory_updated">Память обновлена.</string>
     <string name="tool_memory_updated_label">Память обновлена</string>
     <string name="tool_call_action_memory">Память</string>
+    <string name="tool_memory_recall_query_empty">Поисковый запрос не может быть пустым.</string>
+    <string name="tool_memory_recall_header">Поиск в памяти по «%1$s» (область: %2$s) — совпадений: %3$d:</string>
+    <string name="tool_memory_recall_empty">В долговременной памяти нет записей по «%1$s» (область: %2$s). Не догадывайтесь — сообщите пользователю, что ничего не найдено, или повторите запрос с другими ключевыми словами.</string>
+    <string name="tool_memory_recall_failed">Ошибка поиска в памяти: %1$s</string>
 
     <!-- ImageGenerationTool -->
     <string name="tool_img_gen_no_context">Инструмент генерации изображений не подключён к контексту приложения.</string>

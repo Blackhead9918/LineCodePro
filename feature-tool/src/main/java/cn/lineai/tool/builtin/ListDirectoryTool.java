@@ -13,6 +13,7 @@ import org.json.JSONObject;
 
 public final class ListDirectoryTool extends BaseTool {
     public static final String NAME = "list_dir";
+    private static final int MAX_ENTRIES = 500;
 
     @Override
     public String getName() {
@@ -88,11 +89,19 @@ public final class ListDirectoryTool extends BaseTool {
             });
             StringBuilder builder = new StringBuilder();
             builder.append(context.getString(R.string.tool_list_dir_content, FileToolPathPolicy.displayPath(context.getHomePath(), dir)));
+            int shown = 0;
             for (File item : items) {
+                if (shown >= MAX_ENTRIES) {
+                    break;
+                }
                 builder.append(item.isDirectory() ? "[DIR]  " : "[FILE] ")
                         .append(item.getName())
                         .append(item.isDirectory() ? "/" : "")
                         .append('\n');
+                shown++;
+            }
+            if (items.length > shown) {
+                builder.append(context.getString(R.string.tool_list_dir_truncated, items.length - shown));
             }
             return ok(builder.toString().trim());
         } catch (Exception e) {

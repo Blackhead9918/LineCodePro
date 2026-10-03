@@ -57,29 +57,13 @@ public class ToolPromptRenderer {
             }
             builder.append("### ").append(config.getName()).append('\n');
             for (String toolName : tools) {
-                ToolInfo tool = toolByName == null ? null : toolByName.get(toolName);
-                builder.append("  - ").append(toolName);
-                if (tool != null) {
-                    builder.append(" [").append(categoryLabel(tool.getCategory()));
-                    if (tool.needsConfirmation()) {
-                        builder.append(", needs confirmation");
-                    }
-                    builder.append("]: ").append(tool.getDescription()).append('\n');
-                    try {
-                        builder.append("    Parameters: ").append(tool.getParameters().toString()).append('\n');
-                    } catch (Exception ignored) {
-                        // A broken tool must not break the whole prompt: parameters degrade to {}.
-                        builder.append("    Parameters: {}\n");
-                    }
-                } else {
-                    builder.append('\n');
-                }
+                appendTool(builder, toolName, toolByName == null ? null : toolByName.get(toolName), nativeToolProtocol);
             }
             builder.append('\n');
         }
-        appendExtensionTools(builder, enabled, renderedTools, toolByName);
+        appendExtensionTools(builder, enabled, renderedTools, toolByName, nativeToolProtocol);
         if (nativeToolProtocol) {
-            builder.append("Tool calls are provided by the current model protocol's native tools/function calling mechanism. When you need to read, write, search, generate images, or list directories, you must use native tool calls; do not output tool call JSON, XML, <tool_calls>, or Markdown code blocks in the response text.")
+            builder.append("Tool calls are provided by the current model protocol's native tools/function calling mechanism; the authoritative parameter schemas come from those native definitions (the list above is only for reference). When you need to read, write, search, generate images, or list directories, you must use native tool calls; do not output tool call JSON, XML, <tool_calls>, or Markdown code blocks in the response text.")
                     .append("After each tool returns, you must continue analyzing the result; if the task is not yet complete, continue calling appropriate tools for the next step.");
         } else {
             builder.append("Tool call format is locked: when you need to call a tool, you must output <tool_calls><tool_call name=\"tool_name\"><argument name=\"param_name\">value</argument></tool_calls>.")
@@ -128,23 +112,7 @@ public class ToolPromptRenderer {
             }
             builder.append("### ").append(config.getName()).append('\n');
             for (String toolName : tools) {
-                ToolInfo tool = toolByName == null ? null : toolByName.get(toolName);
-                builder.append("  - ").append(toolName);
-                if (tool != null) {
-                    builder.append(" [").append(categoryLabel(tool.getCategory()));
-                    if (tool.needsConfirmation()) {
-                        builder.append(", needs confirmation");
-                    }
-                    builder.append("]: ").append(tool.getDescription()).append('\n');
-                    try {
-                        builder.append("    Parameters: ").append(tool.getParameters().toString()).append('\n');
-                    } catch (Exception ignored) {
-                        // A broken tool must not break the whole prompt: parameters degrade to {}.
-                        builder.append("    Parameters: {}\n");
-                    }
-                } else {
-                    builder.append('\n');
-                }
+                appendTool(builder, toolName, toolByName == null ? null : toolByName.get(toolName), nativeToolProtocol);
             }
             String supplement = findToolSupplement(config, executionMode, isSsh, toolByName);
             if (supplement != null) {
@@ -152,7 +120,7 @@ public class ToolPromptRenderer {
             }
             builder.append('\n');
         }
-        appendExtensionTools(builder, enabled, renderedTools, toolByName);
+        appendExtensionTools(builder, enabled, renderedTools, toolByName, nativeToolProtocol);
         builder.append("After each tool returns, you must continue analyzing the output; if the task is not yet complete, continue calling appropriate tools for the next step.")
                 .append("Do not stop after just one or two shell command executions; only respond to the user when you confirm the task is complete, blocked, or requires a user decision.\n");
         if (nativeToolProtocol) {
@@ -164,11 +132,36 @@ public class ToolPromptRenderer {
         return builder.toString().trim();
     }
 
+    private static void appendTool(StringBuilder builder, String toolName, ToolInfo tool, boolean nativeToolProtocol) {
+        builder.append("  - ").append(toolName);
+        if (tool == null) {
+            builder.append('\n');
+            return;
+        }
+        builder.append(" [").append(categoryLabel(tool.getCategory()));
+        if (tool.needsConfirmation()) {
+            builder.append(", needs confirmation");
+        }
+        builder.append("]: ").append(tool.getDescription()).append('\n');
+        if (nativeToolProtocol) {
+            // The protocol already sends authoritative parameter schemas through native
+            // function calling; repeating them here only burns context tokens.
+            return;
+        }
+        try {
+            builder.append("    Parameters: ").append(tool.getParameters().toString()).append('\n');
+        } catch (Exception ignored) {
+            // A broken tool must not break the whole prompt: parameters degrade to {}.
+            builder.append("    Parameters: {}\n");
+        }
+    }
+
     private static void appendExtensionTools(
             StringBuilder builder,
             Set<String> enabled,
             Set<String> renderedTools,
-            Map<String, ToolInfo> toolByName
+            Map<String, ToolInfo> toolByName,
+            boolean nativeToolProtocol
     ) {
         ArrayList<String> extensionTools = new ArrayList<>();
         for (String toolName : enabled) {
@@ -183,19 +176,7 @@ public class ToolPromptRenderer {
         builder.append("### Extensions\n");
         for (String toolName : extensionTools) {
             ToolInfo tool = toolByName == null ? null : toolByName.get(toolName);
-            builder.append("  - ").append(toolName);
-            if (tool != null) {
-                builder.append(" [").append(categoryLabel(tool.getCategory())).append("]: ")
-                        .append(tool.getDescription()).append('\n');
-                try {
-                    builder.append("    Parameters: ").append(tool.getParameters().toString()).append('\n');
-                } catch (Exception ignored) {
-                    // A broken tool must not break the whole prompt: parameters degrade to {}.
-                    builder.append("    Parameters: {}\n");
-                }
-            } else {
-                builder.append('\n');
-            }
+            appendTool(builder, toolName, tool, nativeToolProtocol);
         }
         builder.append('\n');
     }

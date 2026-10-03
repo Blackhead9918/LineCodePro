@@ -2,6 +2,7 @@ package cn.lineai.tool.builtin;
 
 import android.content.Context;
 import cn.lineai.data.repository.LearningContextStore;
+import cn.lineai.data.repository.MemoryRanker;
 import cn.lineai.model.MemoryOverviewState;
 import cn.lineai.model.tool.ToolResult;
 import cn.lineai.tool.BaseTool;
@@ -10,13 +11,23 @@ import cn.lineai.tool.ToolCategory;
 import cn.lineai.tool.ToolContext;
 import cn.lineai.tool.ToolDisplayCategory;
 import cn.lineai.tool.ToolNames;
+import java.util.List;
 import java.util.Locale;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * Recalls durable long-term memories that actually match the query.
+ * <p>
+ * The search is performed against the persisted memories table with keyword
+ * relevance ranking (no "recent fallback"), so an empty result is reported
+ * honestly instead of returning unrelated memories that could mislead the model.
+ */
 public final class MemoryRecallTool extends BaseTool {
     public static final String NAME = ToolNames.MEMORY_RECALL;
+    private static final int DEFAULT_LIMIT = 5;
+    private static final int MAX_LIMIT = 10;
 
     @Override
     public String getName() {
@@ -25,8 +36,9 @@ public final class MemoryRecallTool extends BaseTool {
 
     @Override
     public String getDescription() {
-        return "Recall and search durable long-term memories, user preferences, architecture invariants, or past lessons. "
-                + "Use this when you need explicit background knowledge about the user, project conventions, or environment.";
+        return "Search durable long-term memories (user preferences, project constraints, environment facts, past lessons) "
+                + "by keywords. Returns only entries that match the query; when nothing matches, report that no memory was found "
+                + "instead of guessing. Prefer this over asking the user to repeat information already stored.";
     }
 
     @Override
@@ -79,25 +91,54 @@ public final class MemoryRecallTool extends BaseTool {
     @Override
     public ToolResult execute(JSONObject input, ToolContext context) {
         if (input == null) {
-            return error("Query parameters cannot be empty.");
+            return error(context.getString(R.string.tool_memory_params_empty));
         }
         String query = input.optString("query", "").trim();
         if (query.length() == 0) {
-            return error("Search query cannot be empty.");
+            return error(context.getString(R.string.tool_memory_recall_query_empty));
         }
-        int limit = Math.min(Math.max(input.optInt("limit", 5), 1), 10);
-        String scope = input.optString("scope", "all").trim().toLowerCase(Locale.ROOT);
+        int limit = Math.min(Math.max(input.optInt("limit", DEFAULT_LIMIT), 1), MAX_LIMIT);
+        String scope = normalizeScope(input.optString("scope", "all"));
 
-        LearningContextStore store = context == null ? null : context.getLearningContextStore();
+        LearningContextStore store = context.getLearningContextStore();
         if (store == null) {
-            return ok("No persistent memory store available in current context.");
+            return error(context.getString(R.string.tool_memory_store_not_init));
         }
+        List<MemoryRanker.Candidate> matches;
+        try {
+            matches = store.searchMemories(context.getHomePath(), query, scope, limit);
+        } catch (Exception e) {
+            return error(context.getString(R.string.tool_memory_recall_failed, describe(e)));
+        }
+        if (matches == null || matches.isEmpty()) {
+            return ok(context.getString(R.string.tool_memory_recall_empty, query, scope));
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append(context.getString(R.string.tool_memory_recall_header, query, scope, matches.size()));
+        for (MemoryRanker.Candidate match : matches) {
+            if (match == null) {
+                continue;
+            }
+            builder.append('\n').append(match.formatted);
+        }
+        return ok(builder.toString());
+    }
 
-        // Return formatted memory search feedback
-        StringBuilder sb = new StringBuilder();
-        sb.append("### Memory Recall Results for: \"").append(query).append("\"\n");
-        sb.append("Scope: ").append(scope).append(" | Max Limit: ").append(limit).append("\n\n");
-        sb.append("(Active memory retrieval connected to project learning store)");
-        return ok(sb.toString());
+    private static String normalizeScope(String scope) {
+        String value = scope == null ? "" : scope.trim().toLowerCase(Locale.ROOT);
+        if (MemoryOverviewState.Memory.SCOPE_USER.equals(value)
+                || MemoryOverviewState.Memory.SCOPE_PROJECT.equals(value)
+                || MemoryOverviewState.Memory.SCOPE_ENVIRONMENT.equals(value)) {
+            return value;
+        }
+        return "all";
+    }
+
+    private static String describe(Exception error) {
+        if (error == null) {
+            return "";
+        }
+        String message = error.getMessage();
+        return message == null ? error.getClass().getSimpleName() : message;
     }
 }
